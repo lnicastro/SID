@@ -963,11 +963,26 @@ template<typename I> template<typename I2>
     vv[i]=vertex[i].to_vec3();
   arr<vec3> normal(ncirc);
   int flip=0;
+//char stt[128];
+//sprintf(stt, "%lf,%lf %lf,%lf %lf,%lf %lf,%lf",
+//vertex[0].theta/degr2rad, vertex[0].phi/degr2rad,
+//vertex[1].theta/degr2rad, vertex[1].phi/degr2rad,
+//vertex[2].theta/degr2rad, vertex[2].phi/degr2rad,
+//vertex[3].theta/degr2rad, vertex[3].phi/degr2rad);
   for (tsize i=0; i<nv; ++i)
     {
     normal[i]=crossprod(vv[i],vv[(i+1)%nv]).Norm();
     double hnd=dotprod(normal[i],vv[(i+2)%nv]);
-    planck_assert(abs(hnd)>1e-10,"degenerate corner");
+    //planck_assert(abs(hnd)>1e-10,"degenerate corner");
+    //planck_assert(abs(hnd)>1e-10, (const char *)stt);
+if (abs(hnd) <= 1e-10) {
+  cerr<<"query_polygon_internal: Degenerate corner:\n"<<
+    vertex[0].theta/degr2rad <<","<< vertex[0].phi/degr2rad <<" "<<
+    vertex[1].theta/degr2rad <<","<< vertex[1].phi/degr2rad <<" "<<
+    vertex[2].theta/degr2rad <<","<< vertex[2].phi/degr2rad <<" "<<
+    vertex[3].theta/degr2rad <<","<< vertex[3].phi/degr2rad <<
+  endl;
+}
     if (i==0)
       flip = (hnd<0.) ? -1 : 1;
     else

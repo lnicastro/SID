@@ -1,4 +1,4 @@
-# Last change: 22/03/2017
+# Last change: 09/11/2017
 #
 MAKE ?= make
 CC   ?= gcc
@@ -35,4 +35,4 @@ install: $(LIBOBJS)
 	cp -a $(LIBUDF) $$pd
 
 clean:
-	rm -rf *.o udf_dif.so
+	rm -rf *.o $(LIBUDF)
