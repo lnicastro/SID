@@ -3,6 +3,7 @@ SRC = src
 default: all
 
 all clean :
+	mkdir -p lib
 	@ cd $(SRC) ; ${MAKE} $@
 
 linux :
