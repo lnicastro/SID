@@ -1,2 +1,0 @@
-g++ -fPIC -c -I../contrib/htmIndex/include htmCircleRegion.cpp
-g++ -fPIC -I./ `mysql_config --include --libs` -shared -o udf_dif.so htmCircleRegion.o udf.cc ../contrib/htmIndex/lib/libSpatialIndex.a
