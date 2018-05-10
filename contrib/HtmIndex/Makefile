@@ -8,6 +8,7 @@
 default: all
 
 all clean :
+	mkdir -p lib
 	@ cd src; ${MAKE} $@
 #	@ cd app; ${MAKE} $@
 
