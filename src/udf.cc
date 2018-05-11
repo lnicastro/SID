@@ -34,9 +34,9 @@ C_MODE_START;
   DEFINE_FUNCTION_CHAR(char*, HTMNeighbC);
   DEFINE_FUNCTION(double, HTMBaryDist);
 
-  DEFINE_FUNCTION_CHAR(char*, DIFCircleHTM);
-  DEFINE_FUNCTION_CHAR(char*, DIFRectHTM);
-  DEFINE_FUNCTION_CHAR(char*, DIFRectvHTM);
+  DEFINE_FUNCTION_CHAR(char*, SIDCircleHTM);
+  DEFINE_FUNCTION_CHAR(char*, SIDRectHTM);
+  DEFINE_FUNCTION_CHAR(char*, SIDRectvHTM);
 
 
 // HEALPix functions
@@ -50,15 +50,15 @@ C_MODE_START;
   DEFINE_FUNCTION_CHAR(char*, HEALPBound);
   DEFINE_FUNCTION_CHAR(char*, HEALPBoundC);
 
-  DEFINE_FUNCTION_CHAR(char*, DIFCircleHEALP);
-  DEFINE_FUNCTION_CHAR(char*, DIFRectHEALP);
-  DEFINE_FUNCTION_CHAR(char*, DIFRectvHEALP);
+  DEFINE_FUNCTION_CHAR(char*, SIDCircleHEALP);
+  DEFINE_FUNCTION_CHAR(char*, SIDRectHEALP);
+  DEFINE_FUNCTION_CHAR(char*, SIDRectvHEALP);
 
 
 // Generic functions
-  DEFINE_FUNCTION(longlong, DIFGetID);
-  DEFINE_FUNCTION(longlong, DIFCount);
-  DEFINE_FUNCTION(longlong, DIFClear);
+  DEFINE_FUNCTION(longlong, SIDGetID);
+  DEFINE_FUNCTION(longlong, SIDCount);
+  DEFINE_FUNCTION(longlong, SIDClear);
   DEFINE_FUNCTION(double, Sphedist);
 
 C_MODE_END;
@@ -507,9 +507,9 @@ void HTMBaryDist_deinit(UDF_INIT* init)
 
 //--------------------------------------------------------------------
 
-my_bool DIFCircleHTM_init(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDCircleHTM_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
-  const char* argerr = "DIFCircleHTM(depth INT, Ra_deg DOUBLE, Dec_deg DOUBLE, Rad_arcmin DOUBLE)";
+  const char* argerr = "SIDCircleHTM(depth INT, Ra_deg DOUBLE, Dec_deg DOUBLE, Rad_arcmin DOUBLE)";
 
   CHECK_ARG_NUM(4);
   CHECK_ARG_NOT_TYPE(0, STRING_RESULT);
@@ -531,7 +531,7 @@ my_bool DIFCircleHTM_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 }
 
 
-char* DIFCircleHTM(UDF_INIT *init, UDF_ARGS *args,
+char* SIDCircleHTM(UDF_INIT *init, UDF_ARGS *args,
                    char *result, unsigned long *length,
                    char *is_null, char *error)
 {
@@ -562,17 +562,17 @@ char* DIFCircleHTM(UDF_INIT *init, UDF_ARGS *args,
 }
 
 
-void DIFCircleHTM_deinit(UDF_INIT *init)
+void SIDCircleHTM_deinit(UDF_INIT *init)
 {
 }
 
 
 //--------------------------------------------------------------------
 
-my_bool DIFRectHTM_init(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDRectHTM_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
 //This function requires the coordinate of the center of the rectangular region and one or two sides.
-const char* argerr = "DIFRectHTM(Depth INT, Ra_deg DOUBLE, Dec_deg DOUBLE, side_ra_arcmin DOUBLE [, side_dec_arcmin DOUBLE])";
+const char* argerr = "SIDRectHTM(Depth INT, Ra_deg DOUBLE, Dec_deg DOUBLE, side_ra_arcmin DOUBLE [, side_dec_arcmin DOUBLE])";
 
   switch (args->arg_count) {
   case 5:
@@ -602,7 +602,7 @@ const char* argerr = "DIFRectHTM(Depth INT, Ra_deg DOUBLE, Dec_deg DOUBLE, side_
 }
 
 
-char* DIFRectHTM(UDF_INIT *init, UDF_ARGS *args,
+char* SIDRectHTM(UDF_INIT *init, UDF_ARGS *args,
                  char *result, unsigned long *length,
                  char *is_null, char *error)
 {
@@ -660,17 +660,17 @@ char* DIFRectHTM(UDF_INIT *init, UDF_ARGS *args,
 }
 
 
-void DIFRectHTM_deinit(UDF_INIT *init)
+void SIDRectHTM_deinit(UDF_INIT *init)
 {
 }
 
 
 //--------------------------------------------------------------------
 
-my_bool DIFRectvHTM_init(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDRectvHTM_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
 //This function requires the coordinates of the 2 opposite (or 4) corners of the rectangular region.
-const char* argerr = "DIFRectvHTM(Depth INT, Ra1_deg DOUBLE, Dec1_deg DOUBLE, Ra2_deg DOUBLE, Dec2_deg DOUBLE [, x 2])";
+const char* argerr = "SIDRectvHTM(Depth INT, Ra1_deg DOUBLE, Dec1_deg DOUBLE, Ra2_deg DOUBLE, Dec2_deg DOUBLE [, x 2])";
 
 
   switch (args->arg_count) {
@@ -704,7 +704,7 @@ const char* argerr = "DIFRectvHTM(Depth INT, Ra1_deg DOUBLE, Dec1_deg DOUBLE, Ra
 }
 
 
-char * DIFRectvHTM(UDF_INIT *init, UDF_ARGS *args,
+char * SIDRectvHTM(UDF_INIT *init, UDF_ARGS *args,
                char *result, unsigned long *length,
                char *is_null, char *error)
 {
@@ -767,7 +767,7 @@ char * DIFRectvHTM(UDF_INIT *init, UDF_ARGS *args,
 }
 
 
-void DIFRectvHTM_deinit(UDF_INIT *init)
+void SIDRectvHTM_deinit(UDF_INIT *init)
 {
 }
 
@@ -1251,9 +1251,9 @@ void HEALPBoundC_deinit(UDF_INIT* init)
 
 //--------------------------------------------------------------------
 
-my_bool DIFCircleHEALP(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDCircleHEALP(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
-  const char* argerr = "DIFCircleHEALP(nested INT, order INT, Ra_deg DOUBLE, Dec_deg DOUBLE, Rad_arcmin DOUBLE)";
+  const char* argerr = "SIDCircleHEALP(nested INT, order INT, Ra_deg DOUBLE, Dec_deg DOUBLE, Rad_arcmin DOUBLE)";
 
 // Assume nested by default if fisrt parameter is missing (4 params passed)
   switch (args->arg_count) {
@@ -1283,7 +1283,7 @@ my_bool DIFCircleHEALP(UDF_INIT* init, UDF_ARGS *args, char *message)
 }
 
 
-char* DIFCircleHEALP(UDF_INIT *init, UDF_ARGS *args,
+char* SIDCircleHEALP(UDF_INIT *init, UDF_ARGS *args,
                    char *result, unsigned long *length,
                    char *is_null, char *error)
 {
@@ -1323,17 +1323,17 @@ char* DIFCircleHEALP(UDF_INIT *init, UDF_ARGS *args,
 }
 
 
-void DIFCircleHEALP_deinit(UDF_INIT *init)
+void SIDCircleHEALP_deinit(UDF_INIT *init)
 {
 }
 
 
 //--------------------------------------------------------------------
 
-my_bool DIFRectHEALP_init(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDRectHEALP_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
 //This function requires the coordinate of the center of the rectangular region and one or two sides.
-const char* argerr = "DIFRectHEALP(Nested INT, Order INT, Ra_deg DOUBLE, Dec_deg DOUBLE, side_ra_arcmin DOUBLE [, side_dec_arcmin DOUBLE])";
+const char* argerr = "SIDRectHEALP(Nested INT, Order INT, Ra_deg DOUBLE, Dec_deg DOUBLE, side_ra_arcmin DOUBLE [, side_dec_arcmin DOUBLE])";
 
   switch (args->arg_count) {
   case 6:
@@ -1364,7 +1364,7 @@ const char* argerr = "DIFRectHEALP(Nested INT, Order INT, Ra_deg DOUBLE, Dec_deg
 }
 
 
-char* DIFRectHEALP(UDF_INIT *init, UDF_ARGS *args,
+char* SIDRectHEALP(UDF_INIT *init, UDF_ARGS *args,
                  char *result, unsigned long *length,
                  char *is_null, char *error)
 {
@@ -1423,17 +1423,17 @@ char* DIFRectHEALP(UDF_INIT *init, UDF_ARGS *args,
 }
 
 
-void DIFRectHEALP_deinit(UDF_INIT *init)
+void SIDRectHEALP_deinit(UDF_INIT *init)
 {
 }
 
 
 //--------------------------------------------------------------------
 
-my_bool DIFRectvHEALP_init(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDRectvHEALP_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
 //This function requires the coordinates of the 2 opposite (or 4) corners of the rectangular region.
-const char* argerr = "DIFRectvHEALP(Nested INT, Order INT, Ra1_deg DOUBLE, Dec1_deg DOUBLE, Ra2_deg DOUBLE, Dec2_deg DOUBLE [, x 2])";
+const char* argerr = "SIDRectvHEALP(Nested INT, Order INT, Ra1_deg DOUBLE, Dec1_deg DOUBLE, Ra2_deg DOUBLE, Dec2_deg DOUBLE [, x 2])";
 
 
   switch (args->arg_count) {
@@ -1468,7 +1468,7 @@ const char* argerr = "DIFRectvHEALP(Nested INT, Order INT, Ra1_deg DOUBLE, Dec1_
 }
 
 
-char * DIFRectvHEALP(UDF_INIT *init, UDF_ARGS *args,
+char * SIDRectvHEALP(UDF_INIT *init, UDF_ARGS *args,
                char *result, unsigned long *length,
                char *is_null, char *error)
 {
@@ -1532,7 +1532,7 @@ char * DIFRectvHEALP(UDF_INIT *init, UDF_ARGS *args,
 }
 
 
-void DIFRectvHEALP_deinit(UDF_INIT *init)
+void SIDRectvHEALP_deinit(UDF_INIT *init)
 {
 }
 
@@ -1544,7 +1544,7 @@ void DIFRectvHEALP_deinit(UDF_INIT *init)
 //  Below generic functions
 //--------------------------------------------------------------------
 
-my_bool DIFCount_init(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDCount_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
 
   init->maybe_null = 0;
@@ -1554,7 +1554,7 @@ my_bool DIFCount_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 }
 
 
-longlong DIFCount(UDF_INIT *init, UDF_ARGS *args,
+longlong SIDCount(UDF_INIT *init, UDF_ARGS *args,
                    char *is_null, char* error)
 {
   char* p = CARGS(0);
@@ -1573,14 +1573,14 @@ longlong DIFCount(UDF_INIT *init, UDF_ARGS *args,
 }
 
 
-void DIFCount_deinit(UDF_INIT *init)
+void SIDCount_deinit(UDF_INIT *init)
 {
 }
 
 
 //--------------------------------------------------------------------
 
-my_bool DIFGetID_init(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDGetID_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
   init->maybe_null = 0;
   init->const_item = 0;
@@ -1589,7 +1589,7 @@ my_bool DIFGetID_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 }
 
 
-longlong DIFGetID(UDF_INIT *init, UDF_ARGS *args,
+longlong SIDGetID(UDF_INIT *init, UDF_ARGS *args,
                    char *is_null, char* error)
 {
   char* p = CARGS(0);
@@ -1606,14 +1606,14 @@ longlong DIFGetID(UDF_INIT *init, UDF_ARGS *args,
 }
 
 
-void DIFGetID_deinit(UDF_INIT *init)
+void SIDGetID_deinit(UDF_INIT *init)
 {
 }
 
 
 //--------------------------------------------------------------------
 
-my_bool DIFClear_init(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDClear_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
   init->maybe_null = 0;
   init->const_item = 0;
@@ -1622,7 +1622,7 @@ my_bool DIFClear_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 }
 
 
-longlong DIFClear(UDF_INIT *init, UDF_ARGS *args,
+longlong SIDClear(UDF_INIT *init, UDF_ARGS *args,
                    char *is_null, char* error)
 {
   char* p = CARGS(0);
@@ -1639,7 +1639,7 @@ longlong DIFClear(UDF_INIT *init, UDF_ARGS *args,
 }
 
 
-void DIFClear_deinit(UDF_INIT *init)
+void SIDClear_deinit(UDF_INIT *init)
 {
 }
 
