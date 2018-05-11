@@ -9,13 +9,10 @@ IF(NOT CMAKE_BUILD_TYPE)
      SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug GProf Valgrind Release RelWithDebInfo MinSizeRel." FORCE)
 ENDIF()
 
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/contrib/HtmIndex/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/contrib/HealPix3)
 include_directories(${MYSQL_CFLAGS})
-
-
 
 execute_process(COMMAND mysql_config --include OUTPUT_VARIABLE MYSQL_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND mysql_config --plugindir OUTPUT_VARIABLE MYSQL_PLUGINDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -36,7 +33,7 @@ add_custom_target(
 
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 
-add_library(udf_dif SHARED
+add_library(udf_sid SHARED
                   src/htmCircleRegion.cpp
                   src/htmRectRegion.cpp
                   src/getHTMid.cpp
@@ -65,11 +62,11 @@ add_library(udf_dif SHARED
                   src/udf.cc
 )
 
-add_dependencies(udf_dif staticLibHtm)
-add_dependencies(udf_dif staticLibHpx)
+add_dependencies(udf_sid staticLibHtm)
+add_dependencies(udf_sid staticLibHpx)
 
-set_target_properties(udf_dif PROPERTIES VERSION ${VERSION})
-target_link_libraries(udf_dif ${CMAKE_CURRENT_SOURCE_DIR}/contrib/HtmIndex/lib/libSpatialIndex.a)
-target_link_libraries(udf_dif ${CMAKE_CURRENT_SOURCE_DIR}/contrib/HealPix3/lib/libHealP3.a)
+set_target_properties(udf_sid PROPERTIES VERSION ${VERSION})
+target_link_libraries(udf_sid ${CMAKE_CURRENT_SOURCE_DIR}/contrib/HtmIndex/lib/libSpatialIndex.a)
+target_link_libraries(udf_sid ${CMAKE_CURRENT_SOURCE_DIR}/contrib/HealPix3/lib/libHealP3.a)
 
-install(TARGETS udf_dif LIBRARY DESTINATION ${MYSQL_PLUGINDIR})
+install(TARGETS udf_sid LIBRARY DESTINATION ${MYSQL_PLUGINDIR})
