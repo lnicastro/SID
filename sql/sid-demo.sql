@@ -13,7 +13,7 @@ CREATE PROCEDURE CreateRegion(IN p CHAR(16), IN ord INTEGER)
 
     IF (countf != 0 OR countp != 0) THEN
       DROP TABLE IF EXISTS SID.sid;
-      CREATE TEMPORARY TABLE SID.sid (param INT not null, id BIGINT not null, full TINYINT not null);
+      CREATE TEMPORARY TABLE SID.sid (sid_param INT not null, sid_id BIGINT not null, sid_full TINYINT not null);
     END IF;
 
     SET i = 0;
@@ -106,13 +106,18 @@ CREATE PROCEDURE RunSelect(IN destTable VARCHAR(50),
 
     SET sqlStatement = '';
     IF (destTable != '') THEN
-   	  SET sqlStatement = CONCAT('INSERT INTO ', destTable, ' ');
+       SET sqlStatement = CONCAT('DROP TABLE IF EXISTS ', destTable);
+       SET @sql = sqlStatement;
+       PREPARE s1 FROM @sql;
+       EXECUTE s1;
+       DEALLOCATE PREPARE s1;
+       SET sqlStatement = CONCAT('CREATE TEMPORARY TABLE ', destTable, ' ');
     END IF;
     
 	SET sqlStatement = CONCAT(sqlStatement, 'SELECT ', fieldList, ' FROM ', mainTable,
-                       ' AS t1 JOIN SID.sid AS t2 ON ( (t1.', indexField, '=t2.id)');
+                       ' AS t1 JOIN SID.sid AS t2 ON ( (t1.', indexField, '=t2.sid_id)');
     IF (Region = 'Circle'  AND  r1 > 0) THEN
- 	  SET sqlStatement = CONCAT(sqlStatement, ' AND (t2.full=1 OR Sphedist(', raField, ', ', deField, ', ', ra, ', ', de, ') <= ', r1, ') )');
+ 	  SET sqlStatement = CONCAT(sqlStatement, ' AND (t2.sid_full=1 OR Sphedist(', raField, ', ', deField, ', ', ra, ', ', de, ') <= ', r1, ') )');
     ELSE
  	  SET sqlStatement = CONCAT(sqlStatement, ')');
     END IF;
@@ -130,43 +135,43 @@ CREATE PROCEDURE RunSelect(IN destTable VARCHAR(50),
 
 
 DROP PROCEDURE IF EXISTS SelectCircleHTM//
-CREATE PROCEDURE SelectCircleHTM(IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
+CREATE PROCEDURE SelectCircleHTM(IN dest VARCHAR(50), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
                                  IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                  IN raField VARCHAR(50), IN deField VARCHAR(50),
                                  IN ra FLOAT, IN de FLOAT, IN radius FLOAT, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
-    CALL SID.RunSelect('', fieldList, mainTable, 'Circle', 'HTM', indexField, indexDepth, raField, deField, ra, de, radius, 0, extra_clause);
+    CALL SID.RunSelect(dest, fieldList, mainTable, 'Circle', 'HTM', indexField, indexDepth, raField, deField, ra, de, radius, 0, extra_clause);
   END//
 
 DROP PROCEDURE IF EXISTS SelectRectHTM//
-CREATE PROCEDURE SelectRectHTM(IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
+CREATE PROCEDURE SelectRectHTM(IN dest VARCHAR(50), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
                                IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                IN raField VARCHAR(50), IN deField VARCHAR(50),
                                IN ra FLOAT, IN de FLOAT, IN r1 FLOAT, IN r2 FLOAT, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
-    CALL SID.RunSelect('', fieldList, mainTable, 'Rect', 'HTM', indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause);
+    CALL SID.RunSelect(dest, fieldList, mainTable, 'Rect', 'HTM', indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause);
   END//
 
 DROP PROCEDURE IF EXISTS SelectCircleHEALP//
-CREATE PROCEDURE SelectCircleHEALP(IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
+CREATE PROCEDURE SelectCircleHEALP(IN dest VARCHAR(50), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
                                    IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                    IN raField VARCHAR(50), IN deField VARCHAR(50),
                                    IN ra FLOAT, IN de FLOAT, IN radius FLOAT, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
-    CALL SID.RunSelect('', fieldList, mainTable, 'Circle', 'HEALP', indexField, indexDepth, raField, deField, ra, de, radius, 0, extra_clause);
+    CALL SID.RunSelect(dest, fieldList, mainTable, 'Circle', 'HEALP', indexField, indexDepth, raField, deField, ra, de, radius, 0, extra_clause);
   END//
 
 DROP PROCEDURE IF EXISTS SelectRectHEALP//
-CREATE PROCEDURE SelectRectHEALP(IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
+CREATE PROCEDURE SelectRectHEALP(IN dest VARCHAR(50), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
                                  IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                  IN raField VARCHAR(50), IN deField VARCHAR(50),
                                  IN ra FLOAT, IN de FLOAT, IN r1 FLOAT, IN r2 FLOAT, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
-    CALL SID.RunSelect('', fieldList, mainTable, 'Rect', 'HEALP', indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause);
+    CALL SID.RunSelect(dest, fieldList, mainTable, 'Rect', 'HEALP', indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause);
   END//
 
 delimiter ;
@@ -181,8 +186,11 @@ delimiter ;
 -- ALTER TABLE ASCC_25orig ADD COLUMN healp10 INT UNSIGNED NOT NULL, ADD KEY (healp10);
 -- UPDATE ASCC_25orig SET healp10 = HEALPLookup(1, 10, RAmas/3.6e6, DECmas/3.6e6);
 
--- CALL SID.SelectCircleHTM  ('*', 'Catalogs.ASCC_25orig', 'htm6'   ,  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
--- CALL SID.SelectCircleHEALP('*', 'Catalogs.ASCC_25orig', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
+-- CALL SID.SelectCircleHTM  ('', '*', 'Catalogs.ASCC_25orig', 'htm6'   ,  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
+-- CALL SID.SelectCircleHEALP('', '*', 'Catalogs.ASCC_25orig', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
 
 
+-- CALL SID.SelectCircleHTM  ('', '*', 'TOCats.TYCHO2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
+
+-- CALL SID.SelectCircleHTM  ('pippo', 'RAmas', 'TOCats.TYCHO2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
 
