@@ -1251,7 +1251,7 @@ void HEALPBoundC_deinit(UDF_INIT* init)
 
 //--------------------------------------------------------------------
 
-my_bool SIDCircleHEALP(UDF_INIT* init, UDF_ARGS *args, char *message)
+my_bool SIDCircleHEALP_init(UDF_INIT* init, UDF_ARGS *args, char *message)
 {
   const char* argerr = "SIDCircleHEALP(nested INT, order INT, Ra_deg DOUBLE, Dec_deg DOUBLE, Rad_arcmin DOUBLE)";
 
