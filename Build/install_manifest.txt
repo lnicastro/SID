@@ -1,0 +1,2 @@
+/usr/local/mysql/lib/plugin/libudf_sid.1.0.0.so
+/usr/local/mysql/lib/plugin/libudf_sid.so
