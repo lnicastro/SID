@@ -36,15 +36,17 @@ sudo make install
 
 ## UDFs installation
 * Import UDFs into MySQL (in the directory `sql`)
-        * shell> cd ../sql
-        * shell> mysql -u root -p
-
-        * mysql> source sidinstall.sql
-
+```
+  shell> cd ../sql
+  shell> mysql -u root -p
+  mysql> source sidinstall.sql
+```
 
 ## Test installation
 1. Import into MySQL the pre-defined SID demo procedures (in the directory `sql`)
-        * `mysql> source sid-demo.sql`
+```
+mysql> source sid-demo.sql
+```
 
 2. Download the [ASCC 2.5](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directoy, say `sid_data`. Can also download the file manually:
 ```
@@ -61,7 +63,7 @@ shell> gunzip ascc25_initial.sql.gz
 mysql> create database Catalogs;
 mysql> use Catalogs;
 mysql> source ~/sid_data/ascc25_initial.sql
-mysql> describe ascc25_initial
+mysql> describe ascc25_initial;
 +---------------+-----------------------+------+-----+---------+-------+
 | Field         | Type                  | Null | Key | Default | Extra |
 +---------------+-----------------------+------+-----+---------+-------+
@@ -77,7 +79,6 @@ mysql> describe ascc25_initial
 | runningnumber | int(10) unsigned      | NO   |     | 0       |       |
 +---------------+-----------------------+------+-----+---------+-------+
 10 rows in set (0.00 sec)
-
 ```
 
 See use cases in the [test](https://github.com/lnicastro/SID/tree/master/test) directory.

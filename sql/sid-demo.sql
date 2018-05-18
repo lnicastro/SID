@@ -180,17 +180,19 @@ delimiter ;
 -- CALL CreateCircle_HTM(6, 10, 20, 100);   SELECT * FROM SID.sid;
 -- CALL CreateCircle_HEALP(10, 10, 20, 10); SELECT * FROM SID.sid;
 
--- ALTER TABLE ASCC_25orig DROP COLUMN hpxid;
--- ALTER TABLE ASCC_25orig ADD COLUMN htm6 INT UNSIGNED NOT NULL, ADD KEY (htm6);
--- UPDATE ASCC_25orig SET htm6 = HTMLookup(6, RAmas/3.6e6, DECmas/3.6e6);
--- ALTER TABLE ASCC_25orig ADD COLUMN healp10 INT UNSIGNED NOT NULL, ADD KEY (healp10);
--- UPDATE ASCC_25orig SET healp10 = HEALPLookup(1, 10, RAmas/3.6e6, DECmas/3.6e6);
+-- Use the ASCC 2.5 catalogue
+--
+-- ALTER TABLE ascc25_initial DROP COLUMN hpxid;
+-- ALTER TABLE ascc25_initial ADD COLUMN htm6 INT UNSIGNED NOT NULL, ADD KEY (htm6);
+-- UPDATE ascc25_initial SET htm6 = HTMLookup(6, RAmas/3.6e6, DECmas/3.6e6);
+-- ALTER TABLE ascc25_initial ADD COLUMN healp10 INT UNSIGNED NOT NULL, ADD KEY (healp10);
+-- UPDATE ascc25_initial SET healp10 = HEALPLookup(1, 10, RAmas/3.6e6, DECmas/3.6e6);
 
--- CALL SID.SelectCircleHTM  ('', '*', 'Catalogs.ASCC_25orig', 'htm6'   ,  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
--- CALL SID.SelectCircleHEALP('', '*', 'Catalogs.ASCC_25orig', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
+-- CALL SID.SelectCircleHTM  ('', '*', 'Catalogs.ascc25_initial', 'htm6'   ,  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
+-- CALL SID.SelectCircleHEALP('', '*', 'Catalogs.ascc25_initial', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
 
 
--- CALL SID.SelectCircleHTM  ('', '*', 'TOCats.TYCHO2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
-
--- CALL SID.SelectCircleHTM  ('pippo', 'RAmas', 'TOCats.TYCHO2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
-
+-- Use the Tycho-2 catalogue
+--
+-- CALL SID.SelectCircleHTM  ('', '*', 'Catalogs.tycho2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
+-- CALL SID.SelectCircleHTM  ('myregion', 'RAmas', 'Catalogs.tycho2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
