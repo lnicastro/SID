@@ -1,6 +1,8 @@
 ## SID use cases
 
-**Test generic SID functions**: HEALPlookup, HTMlookup, sphedist, ...
+**Test generic SID functions**: HEALPLookup, HTMLookup, sphedist, ...
+The star catalogue `ascc25_initial` is available [here](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz).
+Download, unzip and source the file from MySQL.
 ```
 mysql> select sphedist(0.0, 0.0, RAmas/3.6e6, DECmas/3.6e6) as sep_arcmin from ascc25_initial limit 3;
 +--------------------+
@@ -37,19 +39,25 @@ mysql> select healplookup(1,6, RAmas/3.6e6, DECmas/3.6e6) as hpx6, htmlookup(6, 
 +-------+-------+
 ```
 
-Let's create a new table and use it.
+Let's create a new `ascc25` table and use it.
 ```
 mysql> CREATE TABLE ascc25 SELECT RAmas, DECmas, RAPMdmas, DECPMdmas, Bmm, Vmm, FLAGvar FROM ascc25_initial;
-mysql> ALTER TABLE ascc25 ADD COLUMN htm6 SMALLINT UNSIGNED NOT NULL;
+mysql> ALTER TABLE ascc25 ADD COLUMN htm6 SMALLINT UNSIGNED NOT NULL, ENGINE=MyISAM;
+mysql> SELECT COUNT(*) FROM ascc25;
++----------+
+| count(*) |
++----------+
+|  2501313 |
++----------+
 mysql> UPDATE ascc25 SET htm6 = HTMLookup(6, RAmas/3.6e6, DECmas/3.6e6);
-mysql> ALTER TABLE ascc25 ADD KEY (htm6);
 mysql> ALTER TABLE ascc25 ADD COLUMN healp10 INT UNSIGNED NOT NULL;
 mysql> UPDATE ascc25 SET healp10 = HEALPLookup(1, 10, RAmas/3.6e6, DECmas/3.6e6);
-mysql> ALTER TABLE ascc25 ADD KEY (healp10);
+mysql> ALTER TABLE ascc25 ADD KEY (htm6), ADD KEY (healp10);
+mysql> SHOW INDEX FROM ascc25;
 ```
 
 Of course the two indexes could be added simultaneously.
-Now let's use the predefined demo procedures to perform some queries on the catalogue. 
+Now let's use the predefined demo procedures to perform some queries on the catalogue. We assume the catalogue is in the database `Catalogs`.
 
 ```
 mysql> CALL SID.SelectCircleHTM  ('', '*', 'Catalogs.ascc25', 'htm6'   ,  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
@@ -57,7 +65,7 @@ mysql> CALL SID.SelectCircleHEALP('', '*', 'Catalogs.ascc25', 'healp10', 10, 'RA
 ```
 
 
-Use the Tycho-2 catalogue
+Here we use the Tycho-2 catalogue, available [here](http://ross2.iasfbo.inaf.it/test-data/tycho2.sql.gz).
 ```
 mysql> CALL SID.SelectCircleHTM  ('', '*', 'Catalogs.tycho2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
 mysql> CALL SID.SelectCircleHTM  ('myregion', 'RAmas', 'Catalogs.tycho2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');

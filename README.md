@@ -1,7 +1,7 @@
 # SID
 Spherical Indexing for Databases
 
-SID is a set of tools aimed at implementing a powerful indexing system for astronomical catalogs and other data with spherical coordinates, stored into MySQL / MariaDB databases. SID is able to use both HTM and HEALPix pixelization schemas and it allows very fast query execution even on billion-row tables. 
+SID is a set of tools aimed at implementing a powerful indexing system for astronomical catalogues and other data with spherical coordinates, stored into MySQL / MariaDB databases. SID is able to use both HTM and HEALPix pixelization schemas and it allows very fast query execution even on billion-row tables. 
 
 Written to be used on Linux and Mac OS.
 
@@ -48,7 +48,7 @@ sudo make install
 mysql> source sid-demo.sql
 ```
 
-2. Download the [ASCC 2.5](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directoy, say `sid_data`. Can also download the file manually:
+2. Download the reduced version of the [ASCC 2.5](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. Can also download the file manually:
 ```
 shell> mkdir ~/sid_data
 shell> cd ~/sid_data
@@ -80,5 +80,6 @@ mysql> describe ascc25_initial;
 +---------------+-----------------------+------+-----+---------+-------+
 10 rows in set (0.00 sec)
 ```
+A reduced version of the Tycho-2 catalogue is also available [here](http://ross2.iasfbo.inaf.it/test-data/tycho2.sql.gz), but any set of data with spherical coordinates can be used.
 
-See use cases in the [test](https://github.com/lnicastro/SID/tree/master/test) directory.
+See use cases in the [test](test/README.md) directory.
