@@ -1,53 +1,56 @@
--- Example queries on TYCHO2 HTM 6 indexed. Coords are in mas.
+-- Use the SID created temporary index table SID.sid to perform joins with
+-- an indexed (HTM or HEALPix) catalogue.
 --
--- fisrt position
+-- Example queries on tycho2 HTM 6 indexed (column name = htmID_6). Coords are in mas.
+-- Must be in the database where the catalogue is stored.
+--
+
+-- First position. Pos in degs, radius in arcmin.
+
 set @depth= 6;
 set @ra= 10;
 set @de= 20;
 set @r= 30;
 
 -- Circle
-call DIF2.difcircpixelsHTM(@depth, @ra, @de, @r);
+call SID.CreateCircle_HTM(@depth, @ra, @de, @r);
 
-select * from MyCats.TYCHO2 as t1 join DIF2.dif_temp as t2 on
- (t1.htmID_6=t2.id) AND (t2.full=1 OR sphedist(t1.ramas/3.6e6, t1.decmas/3.6e6, @ra, @de) < @r);
+select * from tycho2 as t1 join SID.sid as t2 on
+ (t1.htmID_6=t2.sid_id) AND (t2.sid_full=1 OR sphedist(t1.ramas/3.6e6, t1.decmas/3.6e6, @ra, @de) < @r);
 
--- order by distance
+-- Order by distance
 select *, sphedist(t1.ramas/3.6e6, t1.decmas/3.6e6, @ra, @de) as d from
- MyCats.TYCHO2 as t1 join DIF2.dif_temp as t2 on
+ tycho2 as t1 join SID.sid as t2 on
  (
-  (t1.htmID_6=t2.id) AND
-  (t2.full=1 OR sphedist(t1.ramas/3.6e6, t1.decmas/3.6e6, @ra, @de) < @r)
+  (t1.htmID_6=t2.sid_id) AND
+  (t2.sid_full=1 OR sphedist(t1.ramas/3.6e6, t1.decmas/3.6e6, @ra, @de) < @r)
  ) order by d;
 
 
--- Rectangle. Give sides in same units ar RA and Dec (i.e. mas) .
-set @dra= 0.2*3.6e6;
-set @dde= 0.1*3.6e6;
+-- Rectangle. Sides in arcmin.
+set @dra= 25;
+set @dde= 15;
 
-call DIF2.difrectpixelsHTM(@depth, @ra, @de, @dra, @dde);
+call SID.CreateRect_HTM(@depth, @ra, @de, @dra, @dde);
 
-select * from MyCats.TYCHO2 as t1 join DIF2.dif_temp as t2 on
-  (t1.htmID_6=t2.id) AND
-  (t2.full=1 OR (t1.ramas > (@ra - @dra) AND t1.ramas < (@ra + @dra) AND (@de - @dde) > t1.decmas AND t1.decmas < (@de + @dde));
+select * from tycho2 as t1 join SID.sid as t2 on
+  (t1.htmID_6=t2.sid_id) AND
+  (t2.sid_full=1 OR (t1.ramas/3.6e6 > (@ra - @dra/60) AND t1.ramas/3.6e6 < (@ra + @dra/60) AND (@de - @dde/60) > t1.decmas/3.6e6 AND t1.decmas/3.6e6 < (@de + @dde/60)));
 
 -- Let's see the pixels IDs
-select * from DIF2.dif_temp;
+select * from SID.sid;
 
 
--- another position
+-- Another position
 set @ra= 20;
 set @de= 30;
 set @r= 10;
 
-call DIF2.difcircpixelsHTM(@depth, @ra, @de, @r);
+call SID.CreateCircle_HTM(@depth, @ra, @de, @r);
 
 select *, sphedist(t1.ramas/3.6e6, t1.decmas/3.6e6, @ra, @de) as d from
- MyCats.TYCHO2 as t1 join DIF2.dif_temp as t2 on
+ tycho2 as t1 join SID.sid as t2 on
  (
-  (t1.htmID_6=t2.id) AND
-  (t2.full=1 OR sphedist(t1.ramas/3.6e6, t1.decmas/3.6e6, @ra, @de) < @r)
+  (t1.htmID_6=t2.sid_id) AND
+  (t2.sid_full=1 OR sphedist(t1.ramas/3.6e6, t1.decmas/3.6e6, @ra, @de) < @r)
  ) order by d;
-
-
--- second position

@@ -72,14 +72,15 @@ CREATE PROCEDURE CreateCircle_HEALP(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN
   END//
 
 DROP PROCEDURE IF EXISTS RunSelect//
-CREATE PROCEDURE RunSelect(IN destTable VARCHAR(50),
-                           IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
+CREATE PROCEDURE RunSelect(IN destTable VARCHAR(64),
+                           IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                            IN Region VARCHAR(50), IN Library VARCHAR(50), IN indexField VARCHAR(50), IN indexDepth INTEGER,
                            IN raField VARCHAR(50), IN deField VARCHAR(50),
                            IN ra FLOAT, IN de FLOAT, IN r1 FLOAT, IN r2 FLOAT, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
     DECLARE sqlStatement VARCHAR(1024);
+    DECLARE dbTable VARCHAR(96) DEFAULT '';
 
     IF (Region != 'Circle'  AND  
         Region != 'Rect') THEN
@@ -90,6 +91,12 @@ CREATE PROCEDURE RunSelect(IN destTable VARCHAR(50),
         Library != 'HEALP') THEN
       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Unrecognized library';
     END IF;
+
+   IF ( LOCATE('.', mainTable, 1) ) THEN
+     SET dbTable = mainTable;
+   ELSE
+     SET dbTable = CONCAT(database(), '.', mainTable);
+   END IF;
 
     IF (Region = 'Circle') THEN
       SET sqlStatement = CONCAT('CALL SID.Create', Region, '_', Library, '(', indexDepth, ', ', ra, ', ', de, ', ', r1, ');');
@@ -114,7 +121,7 @@ CREATE PROCEDURE RunSelect(IN destTable VARCHAR(50),
        SET sqlStatement = CONCAT('CREATE TEMPORARY TABLE ', destTable, ' ');
     END IF;
     
-	SET sqlStatement = CONCAT(sqlStatement, 'SELECT ', fieldList, ' FROM ', mainTable,
+	SET sqlStatement = CONCAT(sqlStatement, 'SELECT ', fieldList, ' FROM ', dbTable,
                        ' AS t1 JOIN SID.sid AS t2 ON ( (t1.', indexField, '=t2.sid_id)');
     IF (Region = 'Circle'  AND  r1 > 0) THEN
  	  SET sqlStatement = CONCAT(sqlStatement, ' AND (t2.sid_full=1 OR Sphedist(', raField, ', ', deField, ', ', ra, ', ', de, ') <= ', r1, ') )');
@@ -135,7 +142,7 @@ CREATE PROCEDURE RunSelect(IN destTable VARCHAR(50),
 
 
 DROP PROCEDURE IF EXISTS SelectCircleHTM//
-CREATE PROCEDURE SelectCircleHTM(IN dest VARCHAR(50), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
+CREATE PROCEDURE SelectCircleHTM(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                  IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                  IN raField VARCHAR(50), IN deField VARCHAR(50),
                                  IN ra FLOAT, IN de FLOAT, IN radius FLOAT, IN extra_clause VARCHAR(1024))
@@ -145,7 +152,7 @@ CREATE PROCEDURE SelectCircleHTM(IN dest VARCHAR(50), IN fieldList VARCHAR(1024)
   END//
 
 DROP PROCEDURE IF EXISTS SelectRectHTM//
-CREATE PROCEDURE SelectRectHTM(IN dest VARCHAR(50), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
+CREATE PROCEDURE SelectRectHTM(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                IN raField VARCHAR(50), IN deField VARCHAR(50),
                                IN ra FLOAT, IN de FLOAT, IN r1 FLOAT, IN r2 FLOAT, IN extra_clause VARCHAR(1024))
@@ -155,7 +162,7 @@ CREATE PROCEDURE SelectRectHTM(IN dest VARCHAR(50), IN fieldList VARCHAR(1024), 
   END//
 
 DROP PROCEDURE IF EXISTS SelectCircleHEALP//
-CREATE PROCEDURE SelectCircleHEALP(IN dest VARCHAR(50), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
+CREATE PROCEDURE SelectCircleHEALP(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                    IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                    IN raField VARCHAR(50), IN deField VARCHAR(50),
                                    IN ra FLOAT, IN de FLOAT, IN radius FLOAT, IN extra_clause VARCHAR(1024))
@@ -165,7 +172,7 @@ CREATE PROCEDURE SelectCircleHEALP(IN dest VARCHAR(50), IN fieldList VARCHAR(102
   END//
 
 DROP PROCEDURE IF EXISTS SelectRectHEALP//
-CREATE PROCEDURE SelectRectHEALP(IN dest VARCHAR(50), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(50),
+CREATE PROCEDURE SelectRectHEALP(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                  IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                  IN raField VARCHAR(50), IN deField VARCHAR(50),
                                  IN ra FLOAT, IN de FLOAT, IN r1 FLOAT, IN r2 FLOAT, IN extra_clause VARCHAR(1024))
