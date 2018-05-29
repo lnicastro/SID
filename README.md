@@ -1,11 +1,14 @@
 # SID
 Spherical Indexing for Databases
 
-SID is a set of tools aimed at implementing a powerful indexing system for astronomical catalogues and other data with spherical coordinates, stored into MySQL / MariaDB databases. SID is able to use both HTM and HEALPix pixelization schemas and it allows very fast query execution even on billion-row tables. 
+SID is a set of tools aimed at implementing a powerful indexing system for astronomical catalogues and other data with spherical coordinates, stored into MySQL / MariaDB databases.
+SID is able to use both  [HTM](http://www.skyserver.org/htm/) and [HEALPix](http://healpix.jpl.nasa.gov/) pixelization schemas and it allows very fast query execution even on billion-row tables. 
+The library is mostly derived from [DIF](https://github.com/lnicastro/DIF), with the main difference being its fully UDFs structure. This means that it is not necessary to install a dedicated storage engine (like in DIF) and consequently it is not requested to have MySQL built from the source code. You only need to have the MySQL header files installed together with `mysql_config`. See e.g. the [MySQL documentation](https://dev.mysql.com/doc/refman/8.0/en/adding-functions.html).
 
 Written to be used on Linux and Mac OS.
 
-THIS IS WORK IN PROGESS !
+## THIS IS WORK IN PROGESS !
+The current version is still a beta release, so please report any problem to the authors.
 
 
 ## Requirements
