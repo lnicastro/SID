@@ -98,8 +98,8 @@ ALTER TABLE tycho2 ADD KEY (htmID_6);
 
 CALL SID.SelectCircleHTM  ('', '*', 'Catalogs.tycho2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
 CALL SID.SelectCircleHTM  ('myregion', 'RAmas, DECmas, VTmm', 'Catalogs.tycho2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 30, '');
-SELECT * FROM myregion;
+SELECT * FROM SID.myregion;
 
-CALL SID.SelectRectHTM  ('myregion', 'RAmas, DECmas, VTmm', 'mpe2018db.tycho2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 30, 20, '');
-SELECT * FROM myregion;
+CALL SID.SelectRectHTM  ('myregion', 'RAmas, DECmas, VTmm', 'Catalogs.tycho2', 'htmID_6',  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 30, 20, '');
+SELECT * FROM SID.myregion;
 ```
