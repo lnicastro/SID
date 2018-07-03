@@ -1,8 +1,7 @@
 ## SID use cases
 
-**Test generic SID functions**: HEALPLookup, HTMLookup, sphedist, ...
 The star catalogue `ascc25_initial` is available [here](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz).
-Download, unzip and source the file from MySQL.
+Download, unzip and source the file from a MySQL DB of your choice.
 ```
 mysql> select sphedist(0.0, 0.0, RAmas/3.6e6, DECmas/3.6e6) as sep_arcmin from ascc25_initial limit 3;
 +--------------------+
@@ -57,7 +56,7 @@ mysql> ALTER TABLE ascc25 ADD KEY (htm6), ADD KEY (healp10);
 mysql> SHOW INDEX FROM ascc25;
 ```
 
-Of course the two indexes could be added simultaneously.
+Of course the two indices could be added simultaneously.
 Now let's use the predefined demo procedures to perform some queries on the catalogue. We assume the catalogue is in the database `Catalogs`.
 
 ```
@@ -76,7 +75,7 @@ The procedure parameters are:
 1.  (string) Output table name. It will be located in the database SID and it is TEMPORARY
             (i.e. will removed when the DB connection is closed).
 2.  (string) Fields to select.
-3.  (string) The DB_name.Table_name to query.
+3.  (string) The 'DB_name.Table_name' to query.
 4.  (string) Field name of the HTM / HEALPix indexed ID.
 5.  (integer) The depth / order of the index.
 6.  (string) The RA field name or its equivalent to get units in degrees.
@@ -85,12 +84,12 @@ The procedure parameters are:
 9.  (float) Region center Dec in degrees.
 10. (float) Region radius in arcmin. For SelectRectHTM/HEALP pass the 1/2 of the rectangle sides along RA and Dec.
     In the example above 25 and 38 arcmin.
-11. (string) Any additional query clause (WHERE , ORDER BY, LIMIT, etc.).
+11. (string) Any additional query clause (WHERE, ORDER BY, LIMIT, etc.).
 
 ```
 
 
-Here we use the Tycho-2 catalogue, available [here](http://ross2.iasfbo.inaf.it/test-data/tycho2.sql.gz) (the `mysql>` prompt is omitted).
+Here we use the Tycho-2 catalogue available [here](http://ross2.iasfbo.inaf.it/test-data/tycho2.sql.gz) (the `mysql>` prompt is omitted).
 ```
 ALTER TABLE tycho2 ADD COLUMN htmID_6 SMALLINT UNSIGNED NOT NULL;
 UPDATE tycho2 SET htmID_6 = HTMLookup(6, RAmas/3.6e6, DECmas/3.6e6);
