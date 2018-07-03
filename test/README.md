@@ -1,6 +1,6 @@
 ## SID use cases
 
-The star catalogue `ascc25_initial` is available [here](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz).
+The stars catalogue `ascc25_initial` is available [here](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz).
 Download, unzip and source the file from a MySQL DB of your choice.
 ```
 mysql> select sphedist(0.0, 0.0, RAmas/3.6e6, DECmas/3.6e6) as sep_arcmin from ascc25_initial limit 3;
@@ -12,8 +12,8 @@ mysql> select sphedist(0.0, 0.0, RAmas/3.6e6, DECmas/3.6e6) as sep_arcmin from a
 |  202.7321211712147 |
 +--------------------+
 
-mysql> CALL CreateCircle_HTM(6, 10, 20, 100);   SELECT * FROM SID.sid;
-mysql> CALL CreateCircle_HEALP(10, 10, 20, 10); SELECT * FROM SID.sid;
+mysql> CALL SID.CreateCircle_HTM(6, 10, 20, 100);    SELECT * FROM SID.sid;
+mysql> CALL SID.CreateCircle_HEALP(10, 10, 20, 10);  SELECT * FROM SID.sid;
 ```
 
 Use the ASCC 2.5 catalogue:
@@ -57,6 +57,7 @@ mysql> SHOW INDEX FROM ascc25;
 ```
 
 Of course the two indices could be added simultaneously.
+
 Now let's use the predefined demo procedures to perform some queries on the catalogue. We assume the catalogue is in the database `Catalogs`.
 
 ```
@@ -70,7 +71,7 @@ mysql> CALL SID.SelectRectHEALP('myregion_rect', 'RAmas/3.6e6, DECmas/3.6e6, Vmm
 mysql> SELECT * FROM SID.myregion_rect;
 ```
 
-The procedure parameters are:
+Procedure parameters are:
 ```
 1.  (string) Output table name. It will be located in the database SID and it is TEMPORARY
             (i.e. will removed when the DB connection is closed).
