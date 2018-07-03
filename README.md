@@ -47,6 +47,7 @@ Import UDFs into MySQL (in the directory `sql`):
 ```
   shell> cd ../sql
   shell> mysql -u root -p
+
   mysql> source sidinstall.sql
 ```
 
@@ -95,7 +96,7 @@ like those you can find in the `sid-demo.sql` (see below).
 
 ## Test installation
 
-1. **Test some SID functions**: sphedist, HEALPLookup, HTMLookup, etc.
+**Test some SID functions**: sphedist, HEALPLookup, HTMLookup, etc.
 Note that several functions are shared with DIF and are documented [here](http://ross.iasfbo.inaf.it/dif/dif.pdf).
 
 Spherical distance of two points, e.g. at coordinates (0,0) (1,1) - degrees:
@@ -175,14 +176,16 @@ mysql> select HTMNeighb(6, 32768);
 
 See the documentation (TODO) for more examples.
 
-2. Import into MySQL the pre-defined SID demo procedures (in the directory `sql`)
+## Demo procedures
+
+Import into MySQL the pre-defined SID demo procedures (in the directory `sql`):
 ```
 mysql> source sid-demo.sql
 ```
 Main provided procedures are:
 
-Name | Input Parameters
-----   ----------------
+ Name             | Input Parameters
+----------------- | ----------------
 CreateCircle_HTM  | (depth, ra, de, radius)
 CreateCircle_HEALP| (order, ra, de, radius)
 CreateRect_HTM    | (depth, ra, de, side_ra, side_dec)
@@ -196,7 +199,8 @@ Note that stored procedures are bounded to the database where you define them. I
 
 For some use cases see the [test](test/README.md) directory.
 
-3. Download the reduced version of the [ASCC 2.5](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. Can also download the file manually:
+## A test catalogue
+Download the reduced version of the [ASCC 2.5](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. Can also download the file manually:
 ```
 shell> mkdir ~/sid_data
 shell> cd ~/sid_data
