@@ -28,13 +28,13 @@
   LN@IASF-INAF, November 2013                      Last change: 15/10/2015
 */
 
-using namespace std;
-
 #include <vector>
 #include "SpatialInterface.h"
 
 /* degrees to radians */
 static const double DEG2RAD = 1.74532925199432957692369E-2;
+
+using namespace std;
 
 
 int getHTMNeighb(char*& saved, int depth, unsigned long long int id,

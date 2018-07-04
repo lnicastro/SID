@@ -23,9 +23,9 @@
   LN@IASF-INAF, Jan 2003                        Last change: 27/10/2015
 */
 
-using namespace std;
-
 #include "SpatialInterface.h"
+
+using namespace std;
 
 
 int getHTMid(char*& saved, int depth, double ra, double dec,

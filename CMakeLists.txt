@@ -18,6 +18,11 @@ execute_process(COMMAND mysql_config --include OUTPUT_VARIABLE MYSQL_CFLAGS OUTP
 execute_process(COMMAND mysql_config --plugindir OUTPUT_VARIABLE MYSQL_PLUGINDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYSQL_CFLAGS}" ) 
 
+# A "clean" command for the contrib libraries
+add_custom_target(
+   contribClean
+   COMMAND make clean
+   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/contrib)
 
 add_custom_target(
    staticLibHtm
@@ -62,6 +67,7 @@ add_library(udf_sid SHARED
                   src/udf.cc
 )
 
+add_dependencies(udf_sid contribClean)
 add_dependencies(udf_sid staticLibHtm)
 add_dependencies(udf_sid staticLibHpx)
 

@@ -21,8 +21,6 @@
   LN@IASF-INAF, October 2008                      Last change: 15/10/2015
 */
 
-using namespace std;
-
 #include <vector>
 #include "SpatialInterface.h"
 
@@ -30,6 +28,8 @@ using namespace std;
 static const double DEG2RAD = 1.74532925199432957692369E-2;
 
 void cleanHTMUval(char*& saved);
+
+using namespace std;
 
 
 double getHTMBaryDist(char*& saved, int depth, unsigned long long int id,

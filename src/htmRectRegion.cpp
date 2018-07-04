@@ -20,13 +20,13 @@
   LN@IASF-INAF, January 2003                   ( Last change: 30/10/2008 )
 */
 
-using namespace std;
-
-#include <vector>
 #include "SpatialInterface.h"
 
 //static const int MY_DEPTH_DEF = 6;
 
+using namespace std;
+
+#include <vector>
 
 int htmRectRegion(int depth, double ra[4], double dec[4],
                   vector<uint64>& flist2,

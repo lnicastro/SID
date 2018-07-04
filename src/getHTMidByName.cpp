@@ -21,9 +21,10 @@
   LN@IASF-INAF, Oct 2015                        Last change: 27/10/2015
 */
 
+#include "SpatialInterface.h"
+
 using namespace std;
 
-#include "SpatialInterface.h"
 
 void cleanHTMUval(char*& saved);
 

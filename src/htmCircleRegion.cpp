@@ -21,12 +21,12 @@
   LN@IASF-INAF, January 2003                   ( Last change: 03/10/2008 )
 */
 
-using namespace std;
-
 #include <vector>
 #include "SpatialInterface.h"
 
 //static const int MY_DEPTH_DEF = 6;
+
+using namespace std;
 
 /* degrees to radians */
 static const double DEG2RAD = 1.74532925199432957692369E-2;
