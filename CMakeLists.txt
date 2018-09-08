@@ -16,7 +16,7 @@ include_directories(${MYSQL_CFLAGS})
 
 execute_process(COMMAND mysql_config --include OUTPUT_VARIABLE MYSQL_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND mysql_config --plugindir OUTPUT_VARIABLE MYSQL_PLUGINDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYSQL_CFLAGS}" ) 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYSQL_CFLAGS} -std=gnu++11" ) 
 
 # A "clean" command for the contrib libraries
 add_custom_target(
@@ -67,9 +67,9 @@ add_library(udf_sid SHARED
                   src/udf.cc
 )
 
-add_dependencies(udf_sid contribClean)
-add_dependencies(udf_sid staticLibHtm)
-add_dependencies(udf_sid staticLibHpx)
+add_dependencies(udf_sid staticLibHtm staticLibHpx)
+add_dependencies(staticLibHtm contribClean)
+add_dependencies(staticLibHpx contribClean)
 
 set_target_properties(udf_sid PROPERTIES VERSION ${VERSION})
 target_link_libraries(udf_sid ${CMAKE_CURRENT_SOURCE_DIR}/contrib/HtmIndex/lib/libSpatialIndex.a)
