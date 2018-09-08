@@ -1,15 +1,23 @@
-#include <iostream>
-//#include <algorithm>
+/*
+   LN 8/9/2018: MySQL 8 changes. Note: added -std=gnu++11 in CMAKE_CXX_FLAGS
+*/
 
-#include <string.h>
+#include <math.h>
+#include <iostream>
+#include <regex>
+#include <string>
+
 #include "udf.hh"
 
-#include <my_global.h>
-//#include <my_sys.h>
+//#include <my_global.h>
 #include <mysql.h>
 
-//#include <m_ctype.h>
-//#include <m_string.h>
+#if MYSQL_VERSION_ID >= 80000
+typedef bool   my_bool;
+#endif
+typedef long long   longlong;
+typedef unsigned long long      uint64;
+
 
 #include "udf_utils.hh"
 
@@ -21,7 +29,8 @@
 
 //Implement UDFs
 
-C_MODE_START;
+//C_MODE_START;
+extern "C" {
 
 // HTM functions
   DEFINE_FUNCTION(longlong, HTMLookup);
@@ -61,7 +70,8 @@ C_MODE_START;
   DEFINE_FUNCTION(longlong, SIDClear);
   DEFINE_FUNCTION(double, Sphedist);
 
-C_MODE_END;
+}
+//C_MODE_END;
 
 
 struct myD
