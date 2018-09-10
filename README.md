@@ -32,7 +32,7 @@ make
 sudo make install
 ```
 
-To compile on Mac OS use the appropriate path for GNU `c++` (the default `/usr/bin/c++` is an alias for `clang++`):
+To compile on Mac OS, use the appropriate path for GNU `c++` (the default `/usr/bin/c++` is an alias for `clang++`), e.g.:
 ```
 mkdir Build
 cd Build
@@ -99,6 +99,7 @@ like those you can find in the `sid-demo.sql` (see below).
 
 **Test some SID functions**: sphedist, HEALPLookup, HTMLookup, etc.
 Note that several functions are shared with DIF and are documented [here](http://ross.iasfbo.inaf.it/dif/dif.pdf).
+Sky coordinates are always degrees. 
 
 Spherical distance of two points, e.g. at coordinates (0,0) (1,1) - degrees:
 ```
@@ -121,7 +122,7 @@ mysql> select HealPMaxS(8);
 
 ```
 
-Lookup ID of a sky point for HTM and HEALPix (nested scheme) depth / order (here depth=6 and order=8):
+Lookup ID of a sky point (20,30) for HTM and HEALPix (nested scheme) depth / order (here depth=6 and order=8):
 ```
 mysql> select HTMLookup(6, 20,30);
 +--------------------+
@@ -198,7 +199,7 @@ SelectRectHEALP   | (dest, fieldList, mainTable, indexField, indexDepth, raField
 
 Note that stored procedures are bounded to the database where you define them. In our case the database is `SID`.
 
-For some use cases see the [test](test/README.md) directory.
+For some use cases see the [test](test) directory.
 
 ## A test catalogue
 Download the reduced version of the [ASCC 2.5](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. Can also download the file manually:
@@ -235,4 +236,4 @@ mysql> describe ascc25_initial;
 ```
 A reduced version of the Tycho-2 catalogue is also available [here](http://ross2.iasfbo.inaf.it/test-data/tycho2.sql.gz), but any set of data with spherical coordinates can be used.
 
-See use cases in the [test](test/README.md) directory.
+See use cases in the [test](test) directory.
