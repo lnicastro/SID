@@ -1,7 +1,7 @@
 ## SID use cases
 
 The stars catalogue `ascc25_initial` is available [here](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz).
-Download, unzip and source the file from a MySQL DB of your choice.
+Download, unzip and source the file from a MySQL DB of your choice. You must have run `source sid-demo.sql` too.
 ```
 mysql> select sphedist(0.0, 0.0, RAmas/3.6e6, DECmas/3.6e6) as sep_arcmin from ascc25_initial limit 3;
 +--------------------+
@@ -39,53 +39,53 @@ mysql> select healplookup(1,6, RAmas/3.6e6, DECmas/3.6e6) as hpx6, htmlookup(6, 
 +-------+-------+
 ```
 
-Let's create a new `ascc25` table and use it:
+Let's create a new `ascc25` table and use it (the `mysql>` prompt is omitted):
 ```
-mysql> CREATE TABLE ascc25 SELECT RAmas, DECmas, RAPMdmas, DECPMdmas, Bmm, Vmm, FLAGvar FROM ascc25_initial;
-mysql> ALTER TABLE ascc25 ADD COLUMN htm6 SMALLINT UNSIGNED NOT NULL, ENGINE=MyISAM;
-mysql> SELECT COUNT(*) FROM ascc25;
+CREATE TABLE ascc25 SELECT RAmas, DECmas, RAPMdmas, DECPMdmas, Bmm, Vmm, FLAGvar FROM ascc25_initial;
+ALTER TABLE ascc25 ADD COLUMN htm6 SMALLINT UNSIGNED NOT NULL, ENGINE=MyISAM;
+SELECT COUNT(*) FROM ascc25;
 +----------+
 | count(*) |
 +----------+
 |  2501313 |
 +----------+
-mysql> UPDATE ascc25 SET htm6 = HTMLookup(6, RAmas/3.6e6, DECmas/3.6e6);
-mysql> ALTER TABLE ascc25 ADD COLUMN healp10 INT UNSIGNED NOT NULL;
-mysql> UPDATE ascc25 SET healp10 = HEALPLookup(1, 10, RAmas/3.6e6, DECmas/3.6e6);
-mysql> ALTER TABLE ascc25 ADD KEY (htm6), ADD KEY (healp10);
-mysql> SHOW INDEX FROM ascc25;
+UPDATE ascc25 SET htm6 = HTMLookup(6, RAmas/3.6e6, DECmas/3.6e6);
+ALTER TABLE ascc25 ADD COLUMN healp10 INT UNSIGNED NOT NULL;
+UPDATE ascc25 SET healp10 = HEALPLookup(1, 10, RAmas/3.6e6, DECmas/3.6e6);
+ALTER TABLE ascc25 ADD KEY (htm6), ADD KEY (healp10);
+SHOW INDEX FROM ascc25;
 ```
-
 Of course the two indices could be added simultaneously.
+Note the `Cardinality` column values. It reports an "estimate" of the number of distinct `htm6` and `healp10` values in the table.
 
-Now let's use the predefined demo procedures to perform some queries on the catalogue. We assume the catalogue is in the database `Catalogs`.
+Now let's use the predefined demo procedures (in `sid-demo.sql`) to perform some queries on the catalogue. We assume the catalogue is in the database `Catalogs`.
 
 ```
-mysql> CALL SID.SelectCircleHTM  ('', '*', 'Catalogs.ascc25', 'htm6'   ,  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
-mysql> CALL SID.SelectCircleHEALP('', '*', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
-mysql> CALL SID.SelectCircleHEALP('myregion_circ', '*', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, '');
-mysql> SELECT * FROM SID.myregion_circ;
-mysql> CALL SID.SelectRectHEALP('myregion_rect', '*', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 25, 38, '');
-mysql> SELECT * FROM SID.myregion_rect;
-mysql> CALL SID.SelectRectHEALP('myregion_rect', 'RAmas/3.6e6, DECmas/3.6e6, Vmm/1000', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 25, 38, 'WHERE Vmm<12000');
-mysql> SELECT * FROM SID.myregion_rect;
+CALL SID.SelectCircleHTM  ('', '*', 'Catalogs.ascc25', 'htm6'   ,  6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
+CALL SID.SelectCircleHEALP('', '*', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, 'LIMIT 10');
+CALL SID.SelectCircleHEALP('myregion_circ', '*', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 10, '');
+SELECT * FROM SID.myregion_circ;
+CALL SID.SelectRectHEALP('myregion_rect', '*', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 25, 38, '');
+SELECT * FROM SID.myregion_rect;
+CALL SID.SelectRectHEALP('myregion_rect', 'RAmas/3.6e6, DECmas/3.6e6, Vmm/1000', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 25, 38, 'WHERE Vmm<12000');
+SELECT * FROM SID.myregion_rect;
 ```
 
 Procedure parameters are:
 ```
-1.  (string) Output table name. It will be located in the database SID and it is TEMPORARY
-            (i.e. will removed when the DB connection is closed).
-2.  (string) Fields to select.
-3.  (string) The 'DB_name.Table_name' to query.
-4.  (string) Field name of the HTM / HEALPix indexed ID.
+1.  (string)  Output table name. It will be located in the database SID and it is TEMPORARY
+              (i.e. will removed when the DB connection is closed). Empty string means display.
+2.  (string)  Fields to select.
+3.  (string)  The 'DB_name.Table_name' to query.
+4.  (string)  Field name of the HTM / HEALPix indexed ID.
 5.  (integer) The depth / order of the index.
-6.  (string) The RA field name or its equivalent to get units in degrees.
-7.  (string) The Dec field name or its equivalent to get units in degrees.
-8.  (float) Region center RA in degrees.
-9.  (float) Region center Dec in degrees.
-10. (float) Region radius in arcmin. For SelectRectHTM/HEALP pass the 1/2 of the rectangle sides along RA and Dec.
+6.  (string)  The RA field name or its equivalent to get units in degrees.
+7.  (string)  The Dec field name or its equivalent to get units in degrees.
+8.  (float)   Region center RA in degrees.
+9.  (float)   Region center Dec in degrees.
+10. (float)   Region radius in arcmin. For SelectRectHTM/HEALP pass the 1/2 of the rectangle sides along RA and Dec.
     In the example above 25 and 38 arcmin.
-11. (string) Any additional query clause (WHERE, ORDER BY, LIMIT, etc.).
+11. (string)  Any additional query clause (WHERE, ORDER BY, LIMIT, etc.).
 
 ```
 
