@@ -1,6 +1,6 @@
 # Makefile for custom HEALPix facilities to be used in DIF.
 # 
-# LN@IASF-INAF, Aug. 2007                        Last change: 16/05/2016
+# LN@IASF-INAF, Aug. 2007                        Last change: 10/09/2018
 #--
 
 MAKE ?= make
@@ -52,7 +52,7 @@ install:
 
 clean:
 	rm -f *.o *.a $(BINDIR)/*
-	rm -f $(LIBDIR)/*.a
+	rm -f $(LIBDIR)/*
 
 # Dependencies
 healpix_base.o: healpix_base.h arr.h geom_utils.h
