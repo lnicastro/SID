@@ -219,7 +219,7 @@ size_t	ValVec<T>::insert( size_t count, size_t offset )
       }
    }
    else if ( count )
-      if ( offset )
+      if ( offset ) {
 	 try {
 	    // destroy obliterated portion of unoccupied region
 	    for ( i = 0; i < count; ++i ) vector_[length_+i].~T();
@@ -238,7 +238,7 @@ size_t	ValVec<T>::insert( size_t count, size_t offset )
 	    length_ = capacity_ = 0;
 	    throw;
 	 }
-      else if ( pFill_ ) {
+      } else if ( pFill_ ) {
 	 for ( i = 0; i < count; ++i ) vector_[length_+i] = *pFill_;
       }
 
