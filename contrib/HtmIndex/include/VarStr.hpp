@@ -291,8 +291,9 @@ size_t	VarStr::insert( size_t count, size_t offset, char c )
 
 	// construct vacated region with fill or default
 	for ( i = 0; i < count; ++i ) vector_[start+i] = c;
-      } else 
+      } else { 
 	for ( i = 0; i < count; ++i ) vector_[length_+i] = c;
+      }
 
    return length_ = newLength;
 }
