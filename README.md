@@ -19,7 +19,7 @@ Temporary, because several functions are shared with DIF, you can have a look to
 
 1. MySQL / MariaDB development files
 2. cmake
-3. GNU `c++`
+3. C/C++ compiler
 
 ## Compile and install
 
@@ -32,7 +32,7 @@ make
 sudo make install
 ```
 
-To compile on Mac OS, use the appropriate path for GNU `c++` (the default `/usr/bin/c++` is an alias for `clang++`), e.g.:
+On Mac OS, if you have compilation errors, try to use the appropriate path for the GNU `c++` (the default `/usr/bin/c++` is an alias for `clang++`), e.g.:
 ```
 mkdir Build
 cd Build
