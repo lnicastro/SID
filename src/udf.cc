@@ -1,8 +1,11 @@
 /*
-   LN 8/9/2018: MySQL 8 changes. Note: added -std=gnu++11 in CMAKE_CXX_FLAGS
+   LN 8/9/2018: MySQL 8 changes. Note: added -std=c++11 in CMAKE_CXX_FLAGS
+
+  Last change: 17/11/2018
 */
 
 #include <math.h>
+#include <cstring>
 #include <iostream>
 #include <regex>
 #include <string>
@@ -1223,7 +1226,7 @@ char * HEALPBoundC(UDF_INIT *init, UDF_ARGS *args,
 
   vector<double> b_ra, b_dec;
   unsigned long nc=0;
-  char temp[40];
+  char temp[51];
   char *ss = init->ptr;
 
   if ( getHealPBoundC1(nested, order, ra, de, step, b_ra, b_dec) ) {
