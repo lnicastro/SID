@@ -1,6 +1,6 @@
 ## SID use cases
 
-The stars catalogue `ascc25_initial` is available [here](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz).
+The stars catalogue `ascc25_initial` is available [here](http://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz).
 Download, unzip and source the file from a MySQL DB of your choice. You must have run `source sid-demo.sql` too.
 ```
 mysql> select sphedist(0.0, 0.0, RAmas/3.6e6, DECmas/3.6e6) as sep_arcmin from ascc25_initial limit 3;
@@ -69,6 +69,8 @@ CALL SID.SelectRectHEALP('myregion_rect', '*', 'Catalogs.ascc25', 'healp10', 10,
 SELECT * FROM SID.myregion_rect;
 CALL SID.SelectRectHEALP('myregion_rect', 'RAmas/3.6e6, DECmas/3.6e6, Vmm/1000', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 25, 38, 'WHERE Vmm<12000');
 SELECT * FROM SID.myregion_rect;
+CALL SID.SelectRectvHEALP('myregion_rect', 'RAmas/3.6e6, DECmas/3.6e6, Vmm/1000', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 189, -2, 'WHERE Vmm<12000');
+SELECT * FROM SID.myregion_rect;
 ```
 
 Procedure parameters are:
@@ -83,8 +85,10 @@ Procedure parameters are:
 7.  (string)  The Dec field name or its equivalent to get units in degrees.
 8.  (float)   Region center RA in degrees.
 9.  (float)   Region center Dec in degrees.
-10. (float)   Region radius in arcmin. For SelectRectHTM/HEALP pass the 1/2 of the rectangle sides along RA and Dec.
+10. (float)   Region radius in arcmin.
+    For SelectRectHTM/HEALP pass the the rectangle sides along RA and Dec.
     In the example above 25 and 38 arcmin.
+    For SelectRectvHTM/HEALP pass the the RA and Dec of two opposite corners.
 11. (string)  Any additional query clause (WHERE, ORDER BY, LIMIT, etc.).
 
 ```

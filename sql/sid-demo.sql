@@ -42,6 +42,16 @@ CREATE PROCEDURE CreateRect_HTM(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN sid
   END//
 
 
+DROP PROCEDURE IF EXISTS CreateRectv_HTM//
+CREATE PROCEDURE CreateRectv_HTM(IN ord INTEGER, IN ra1 FLOAT, IN de1 FLOAT, IN ra2 FLOAT, IN de2 FLOAT)
+  NOT DETERMINISTIC
+  BEGIN
+    DECLARE p CHAR(16);
+    SET p = SIDRectvHTM(ord, ra1, de1, ra2, de2);
+    CALL SID.CreateRegion(p, ord);  
+  END//
+
+
 DROP PROCEDURE IF EXISTS CreateCircle_HTM//
 CREATE PROCEDURE CreateCircle_HTM(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN rad FLOAT)
   NOT DETERMINISTIC
@@ -58,6 +68,16 @@ CREATE PROCEDURE CreateRect_HEALP(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN s
   BEGIN
     DECLARE p CHAR(16);
     SET p = SIDRectHEALP(1, ord, ra, de, side_ra, side_de);
+    CALL SID.CreateRegion(p, ord);  
+  END//
+
+
+DROP PROCEDURE IF EXISTS CreateRectv_HEALP//
+CREATE PROCEDURE CreateRectv_HEALP(IN ord INTEGER, IN ra1 FLOAT, IN de1 FLOAT, IN ra2 FLOAT, IN de2 FLOAT)
+  NOT DETERMINISTIC
+  BEGIN
+    DECLARE p CHAR(16);
+    SET p = SIDRectvHEALP(1, ord, ra1, de1, ra2, de2);
     CALL SID.CreateRegion(p, ord);  
   END//
 
@@ -83,6 +103,7 @@ CREATE PROCEDURE RunSelect(IN destTable VARCHAR(64),
     DECLARE dbTable VARCHAR(96) DEFAULT '';
 
     IF (Region != 'Circle'  AND  
+        Region != 'Rectv'   AND
         Region != 'Rect') THEN
       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Unrecognized region';
     END IF;
@@ -100,8 +121,8 @@ CREATE PROCEDURE RunSelect(IN destTable VARCHAR(64),
 
     IF (Region = 'Circle') THEN
       SET sqlStatement = CONCAT('CALL SID.Create', Region, '_', Library, '(', indexDepth, ', ', ra, ', ', de, ', ', r1, ');');
-    ELSE 
-      IF (Region = 'Rect') THEN
+    ELSE
+      IF (Region = 'Rect' OR Region = 'Rectv') THEN
         SET sqlStatement = CONCAT('CALL SID.Create', Region, '_', Library, '(', indexDepth, ', ', ra, ', ', de, ', ', r1, ', ', r2, ');');
       END IF;
     END IF;
@@ -161,6 +182,16 @@ CREATE PROCEDURE SelectRectHTM(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), 
     CALL SID.RunSelect(dest, fieldList, mainTable, 'Rect', 'HTM', indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause);
   END//
 
+DROP PROCEDURE IF EXISTS SelectRectvHTM//
+CREATE PROCEDURE SelectRectvHTM(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
+                               IN indexField VARCHAR(50), IN indexDepth INTEGER,
+                               IN raField VARCHAR(50), IN deField VARCHAR(50),
+                               IN ra1 FLOAT, IN de1 FLOAT, IN ra2 FLOAT, IN de2 FLOAT, IN extra_clause VARCHAR(1024))
+  DETERMINISTIC
+  BEGIN
+    CALL SID.RunSelect(dest, fieldList, mainTable, 'Rectv', 'HTM', indexField, indexDepth, raField, deField, ra1, de1, ra2, de2, extra_clause);
+  END//
+
 DROP PROCEDURE IF EXISTS SelectCircleHEALP//
 CREATE PROCEDURE SelectCircleHEALP(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                    IN indexField VARCHAR(50), IN indexDepth INTEGER,
@@ -179,6 +210,16 @@ CREATE PROCEDURE SelectRectHEALP(IN dest VARCHAR(64), IN fieldList VARCHAR(1024)
   DETERMINISTIC
   BEGIN
     CALL SID.RunSelect(dest, fieldList, mainTable, 'Rect', 'HEALP', indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause);
+  END//
+
+DROP PROCEDURE IF EXISTS SelectRectvHEALP//
+CREATE PROCEDURE SelectRectvHEALP(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
+                                 IN indexField VARCHAR(50), IN indexDepth INTEGER,
+                                 IN raField VARCHAR(50), IN deField VARCHAR(50),
+                                 IN ra1 FLOAT, IN de1 FLOAT, IN ra2 FLOAT, IN de2 FLOAT, IN extra_clause VARCHAR(1024))
+  DETERMINISTIC
+  BEGIN
+    CALL SID.RunSelect(dest, fieldList, mainTable, 'Rectv', 'HEALP', indexField, indexDepth, raField, deField, ra1, de1, ra2, de2, extra_clause);
   END//
 
 delimiter ;

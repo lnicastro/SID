@@ -12,7 +12,7 @@ Written to be used on Linux and Mac OS.
 
 The current version is still a beta release, so please report any problem to the authors.
 Package documentation is TODO.
-Temporary, because several functions are shared with DIF, you can have a look to the document [here](http://ross.iasfbo.inaf.it/dif/dif.pdf).
+Temporary, because several functions are shared with DIF, you can have a look to the document [here](https://github.com/lnicastro/DIF/doc).
 
 
 ## Requirements
@@ -196,6 +196,8 @@ SelectCircleHTM   | (dest, fieldList, mainTable, indexField, indexDepth, raField
 SelectCircleHEALP | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra, de, radius, extra_clause)
 SelectRectHTM     | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause)
 SelectRectHEALP   | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause)
+SelectRectvHTM    | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra1, de1, ra2, de2, extra_clause)
+SelectRectvHEALP  | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra1, de1, ra2, de2, extra_clause)
 
 Note that stored procedures are bounded to the database where you define them. In our case the database is `SID`.
 
