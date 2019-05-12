@@ -69,6 +69,7 @@ CALL SID.SelectRectHEALP('myregion_rect', '*', 'Catalogs.ascc25', 'healp10', 10,
 SELECT * FROM SID.myregion_rect;
 CALL SID.SelectRectHEALP('myregion_rect', 'RAmas/3.6e6, DECmas/3.6e6, Vmm/1000', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 25, 38, 'WHERE Vmm<12000');
 SELECT * FROM SID.myregion_rect;
+CALL SID.SelectRectvHTM('', 'RAmas/3.6e6, DECmas/3.6e6, Vmm/1000', 'Catalogs.ascc25', 'htm6', 6, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 189, -2, 'WHERE Vmm<12000');
 CALL SID.SelectRectvHEALP('myregion_rect', 'RAmas/3.6e6, DECmas/3.6e6, Vmm/1000', 'Catalogs.ascc25', 'healp10', 10, 'RAmas/3.6e6', 'DECmas/3.6e6', 188, -3, 189, -2, 'WHERE Vmm<12000');
 SELECT * FROM SID.myregion_rect;
 ```
@@ -86,7 +87,7 @@ Procedure parameters are:
 8.  (float)   Region center RA in degrees.
 9.  (float)   Region center Dec in degrees.
 10. (float)   Region radius in arcmin.
-    For SelectRectHTM/HEALP pass the the rectangle sides along RA and Dec.
+    For SelectRectHTM/HEALP pass the rectangle sides length along RA and Dec.
     In the example above 25 and 38 arcmin.
     For SelectRectvHTM/HEALP pass the the RA and Dec of two opposite corners.
 11. (string)  Any additional query clause (WHERE, ORDER BY, LIMIT, etc.).
