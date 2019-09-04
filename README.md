@@ -98,15 +98,15 @@ SIDRectHEALP  | (*var*)
 SIDRectvHEALP | (RA1, Dec1, RA2, Dec2)
 
 Note that SID specific UDFs are not meant to be used directly in SQL commands, but rather within stored procedures
-like those you can find in the `sid-demo.sql` (see below).
+like those you can find in `sid-demo.sql` (see below).
 
 ## Test installation
 
 **Test some SID functions**: sphedist, HEALPLookup, HTMLookup, etc.
 Note that several functions are shared with DIF and are documented [here](https://github.com/lnicastro/DIF/doc).
-Sky coordinates are always degrees. 
+Input sky coordinates units are degrees.  
 
-Spherical distance of two points, e.g. at coordinates (0,0) (1,1) - degrees:
+Spherical distance of two points, e.g. at coordinates (0,0) (1,1) - output is in arcmin:
 ```
 mysql> select sphedist(0.0, 0.0, 1.0, 1.0) as d_arcmin;
 +-------------------+
