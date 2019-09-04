@@ -2,17 +2,22 @@
 
 Spherical Indexing for Databases
 
-SID is a set of tools aimed at implementing a powerful indexing system for astronomical catalogues and other data with spherical coordinates, stored into MySQL / MariaDB databases.
-SID is able to use both  [HTM](http://www.skyserver.org/htm/) and [HEALPix](http://healpix.jpl.nasa.gov/) pixelization schemas and it allows very fast query execution even on billion-row tables. 
-The library is mostly derived from [DIF](https://github.com/lnicastro/DIF), with the main difference being its fully UDFs structure. This means that it is not necessary to install a dedicated storage engine (like in DIF) and consequently it is not requested to have MySQL built from the source code. You only need to have the MySQL header files installed together with `mysql_config`. See e.g. the [MySQL documentation](https://dev.mysql.com/doc/refman/8.0/en/adding-functions.html).
+SID is a set of tools aimed at implementing a powerful indexing system for astronomical
+catalogues and other data with spherical coordinates, stored into MySQL / MariaDB databases.
+SID is able to use both  [HTM](http://www.skyserver.org/htm/) and [HEALPix](http://healpix.jpl.nasa.gov/)
+pixelization schemas and it allows very fast query execution even on billion-row tables. 
+The library is mostly derived from [DIF](https://github.com/lnicastro/DIF), with the main
+difference being its fully UDFs structure. This means that it is not necessary to install
+a dedicated storage engine (like in DIF) and consequently it is not requested to use the MySQL
+source code to compile SID. You only need to have the MySQL header files installed together with `mysql_config`. See e.g. the [MySQL documentation](https://dev.mysql.com/doc/refman/8.0/en/adding-functions.html).
 
 Written to be used on Linux and Mac OS.
 
 ## THIS IS WORK IN PROGESS !
 
 The current version is still a beta release, so please report any problem to the authors.
-Package documentation is TODO.
-Temporary, because several functions are shared with DIF, you can have a look to the document [here](https://github.com/lnicastro/DIF/doc).
+Package extended documentation is TODO.
+However, because several functions are shared with DIF, you can have a look to the document [here](https://github.com/lnicastro/DIF/doc).
 
 
 ## Requirements
@@ -98,7 +103,7 @@ like those you can find in the `sid-demo.sql` (see below).
 ## Test installation
 
 **Test some SID functions**: sphedist, HEALPLookup, HTMLookup, etc.
-Note that several functions are shared with DIF and are documented [here](http://ross.iasfbo.inaf.it/dif/dif.pdf).
+Note that several functions are shared with DIF and are documented [here](https://github.com/lnicastro/DIF/doc).
 Sky coordinates are always degrees. 
 
 Spherical distance of two points, e.g. at coordinates (0,0) (1,1) - degrees:
@@ -176,7 +181,7 @@ mysql> select HTMNeighb(6, 32768);
 +----------------------------------------------------------------------+
 ```
 
-See the documentation (TODO) for more examples.
+See the documentation (TODO) and the [test](test) directory for more examples.
 
 ## Demo procedures
 
@@ -204,18 +209,16 @@ Note that stored procedures are bounded to the database where you define them. I
 For some use cases see the [test](test) directory.
 
 ## A test catalogue
-Download the reduced version of the [ASCC 2.5](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. Can also download the file manually:
+Download the reduced version of the [ASCC 2.5](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. From a terminal:
 ```
 shell> mkdir ~/sid_data
 shell> cd ~/sid_data
 shell> wget http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz
-```
-
-Uncompress and load the data into a database of your choice, e.g. `Catalogs`:
-```
-shell> cd ~/sid_data
 shell> gunzip ascc25_initial.sql.gz
+```
 
+Load the data into a database of your choice, e.g. `Catalogs`:
+```
 mysql> create database Catalogs;
 mysql> use Catalogs;
 mysql> source ~/sid_data/ascc25_initial.sql
