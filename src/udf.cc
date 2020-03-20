@@ -30,6 +30,16 @@ typedef unsigned long long      uint64;
 #endif
 
 
+/* Minimum cone radius or rectangle half side: ~ 1 mas - this is function
+ *   of K and "fact" in "query_disc_inclusive" and "query_multidisc" - TBC
+ */
+//static const double MIN_CONE_RAD = 5e-9;
+static const double MIN_CONE_DEG = 2.865e-7;
+
+// use an approx offset for coords close to limits 0,360 and +/-90 deg
+static const double MIN_OFF_DEG = 6e-4;
+
+
 //Implement UDFs
 
 //C_MODE_START;
@@ -626,10 +636,12 @@ char* SIDRectHTM(UDF_INIT *init, UDF_ARGS *args,
   double hside_de = (args->arg_count == 5  ?  DARGS(4)/120.  :  hside_ra);
 
 // Some parameter checks
-  if (cra < 0.) cra += 360.;
+  while (cra < 0.)
+    cra += 360.;
+  while (cra > 360.)
+    cra -= 360.;
 
-  if ( (! (  0. <= cra      &&  cra       <  360.))  ||
-       (! (-90. <= cde      &&  cde       <=  90.))  ||
+  if ( (! (-90. <= cde      &&  cde       <=  90.))  ||
        (! (  0. < hside_ra  &&  hside_ra  <= 180.))  ||
        (! (  0. < hside_de  &&  hside_de  <=  90.)) ) {
     *error = 1;
@@ -639,7 +651,8 @@ char* SIDRectHTM(UDF_INIT *init, UDF_ARGS *args,
 
   hside_ra /= cos(cde*DEG2RAD);
 
-  if (hside_ra > 180.) hside_ra = 180.;
+  if (hside_ra > 180.)
+    hside_ra = 180.;
 
   double ra[4], de[4];
 
@@ -647,6 +660,24 @@ char* SIDRectHTM(UDF_INIT *init, UDF_ARGS *args,
   de[0] = cde - hside_de;
   ra[2] = cra + hside_ra;
   de[1] = cde + hside_de;
+
+// RA in range
+  if (ra[0] < 0.)
+    ra[0] += 360.;
+  if (ra[2] > 360.)
+    ra[2] -= 360.;
+
+// Peculiar Dec
+  if (de[0] < -90.) {
+    de[0] = -90. + MIN_OFF_DEG;
+  } else if (de[0] == -90.)
+    de[0] += MIN_OFF_DEG;
+
+  if (de[1] > 90.) {
+    de[1] = 90. - MIN_OFF_DEG;
+  } else if (de[1] == 90.)
+    de[1] -= MIN_OFF_DEG;
+
   ra[1] = ra[0];
   de[2] = de[1];
   ra[3] = ra[2];
@@ -731,35 +762,60 @@ char * SIDRectvHTM(UDF_INIT *init, UDF_ARGS *args,
     ra[1] = DARGS(3);
     de[1] = DARGS(4);
 
+// RA in 0 - 2pi
+  while (ra[0] < 0.)
+    ra[0] += 360.;
+  while (ra[1] > 360.)
+    ra[1] -= 360.;
+
+  if (ra[0] == ra[1]) {
+    ra[0] = MIN_OFF_DEG;
+    ra[1] = 360.;
+  }
+
 // Order ranges (clockwise)
     if (ra[0] < ra[1]) {
-      ra[0] = ra[0];
       ra[2] = ra[1];
     } else {
+      double ratemp = ra[0];
       ra[0] = ra[1];
-      ra[2] = ra[0];
+      ra[2] = ratemp;
     }
     ra[1] = ra[0];
     ra[3] = ra[2];
 
     if (de[0] < de[1]) {
-      de[0] = de[0];
       de[1] = de[1];
     } else {
+      double detemp = de[0];
       de[0] = de[1];
-      de[1] = de[0];
+      de[1] = detemp;
     }
     de[2] = de[1];
     de[3] = de[0];
 
-  }
-  else {
-    for (unsigned short i=1; i<args->arg_count; i+=2) {
+// Peculiar Dec
+    if (de[0] < -90.) {
+      de[0] = -90. + MIN_OFF_DEG;
+    } else if (de[0] == -90.)
+      de[0] += MIN_OFF_DEG;
+
+    if (de[1] > 90.) {
+      de[1] = 90. - MIN_OFF_DEG;
+    } else if (de[1] == 90.)
+      de[1] -= MIN_OFF_DEG;
+
+    if (de[0] == de[1]) {
+      de[0] = MIN_OFF_DEG;
+      de[1] = 90. - MIN_OFF_DEG;
+    }
+
+  } else {
+    for (unsigned short i=2; i<args->arg_count; i+=2) {  // Keep coordinates as are (TODO)
       ra[i] = DARGS(i);
       de[i] = DARGS(i+1);
     }
   }
-
 
   struct myD* m = (struct myD*) init->ptr;
 
@@ -1389,10 +1445,12 @@ char* SIDRectHEALP(UDF_INIT *init, UDF_ARGS *args,
   double hside_de = (args->arg_count == 6  ?  DARGS(5)/120.  :  hside_ra);
 
 // Some parameter checks
-  if (cra < 0.) cra += 360.;
+  while (cra < 0.)
+    cra += 360.;
+  while (cra > 360.)
+    cra -= 360.;
 
-  if ( (! (  0. <= cra      &&  cra       <  360.))  ||
-       (! (-90. <= cde      &&  cde       <=  90.))  ||
+  if ( (! (-90. <= cde      &&  cde       <=  90.))  ||
        (! (  0. < hside_ra  &&  hside_ra  <= 180.))  ||
        (! (  0. < hside_de  &&  hside_de  <=  90.)) ) {
     *error = 1;
@@ -1402,7 +1460,8 @@ char* SIDRectHEALP(UDF_INIT *init, UDF_ARGS *args,
 
   hside_ra /= cos(cde*DEG2RAD);
 
-  if (hside_ra > 180.) hside_ra = 180.;
+  if (hside_ra > 180.)
+    hside_ra = 180.;
 
   double ra[4], de[4];
 
@@ -1410,6 +1469,24 @@ char* SIDRectHEALP(UDF_INIT *init, UDF_ARGS *args,
   de[0] = cde - hside_de;
   ra[2] = cra + hside_ra;
   de[1] = cde + hside_de;
+
+// RA in range
+  if (ra[0] < 0.)
+    ra[0] += 360.;
+  if (ra[2] > 360.)
+    ra[2] -= 360.;
+
+// Peculiar Dec
+  if (de[0] < -90.) {
+    de[0] = -90. + MIN_OFF_DEG;
+  } else if (de[0] == -90.)
+    de[0] += MIN_OFF_DEG;
+
+  if (de[1] > 90.) {
+    de[1] = 90. - MIN_OFF_DEG;
+  } else if (de[1] == 90.)
+    de[1] -= MIN_OFF_DEG;
+
   ra[1] = ra[0];
   de[2] = de[1];
   ra[3] = ra[2];
@@ -1496,35 +1573,61 @@ char * SIDRectvHEALP(UDF_INIT *init, UDF_ARGS *args,
     ra[1] = DARGS(4);
     de[1] = DARGS(5);
 
+// RA in 0 - 2pi
+  while (ra[0] < 0.)
+    ra[0] += 360.;
+
+  while (ra[1] > 360.)
+    ra[1] -= 360.;
+
+  if (ra[0] == ra[1]) {
+    ra[0] = MIN_OFF_DEG;
+    ra[1] = 360.;
+  }
+
 // Order ranges (clockwise)
     if (ra[0] < ra[1]) {
-      ra[0] = ra[0];
       ra[2] = ra[1];
     } else {
+      double ratemp = ra[0];
       ra[0] = ra[1];
-      ra[2] = ra[0];
+      ra[2] = ratemp;
     }
     ra[1] = ra[0];
     ra[3] = ra[2];
 
     if (de[0] < de[1]) {
-      de[0] = de[0];
       de[1] = de[1];
     } else {
+      double detemp = de[0];
       de[0] = de[1];
-      de[1] = de[0];
+      de[1] = detemp;
     }
     de[2] = de[1];
     de[3] = de[0];
 
-  }
-  else {
-    for (unsigned short i=2; i<args->arg_count; i+=2) {
+// Peculiar Dec
+    if (de[0] < -90.) {
+      de[0] = -90. + MIN_OFF_DEG;
+    } else if (de[0] == -90.)
+      de[0] += MIN_OFF_DEG;
+
+    if (de[1] > 90.) {
+      de[1] = 90. - MIN_OFF_DEG;
+    } else if (de[1] == 90.)
+      de[1] -= MIN_OFF_DEG;
+
+    if (de[0] == de[1]) {
+      de[0] = MIN_OFF_DEG;
+      de[1] = 90. - MIN_OFF_DEG;
+    }
+
+  } else {
+    for (unsigned short i=2; i<args->arg_count; i+=2) {  // Keep coordinates as are (TODO)
       ra[i] = DARGS(i);
       de[i] = DARGS(i+1);
     }
   }
-
 
   struct myD* m = (struct myD*) init->ptr;
 
