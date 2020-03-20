@@ -198,22 +198,22 @@ CreateCircle_HEALP| (order, ra, de, radius)
 CreateRect_HTM    | (depth, ra, de, side_ra, side_dec)
 CreateRect_HEALP  | (order, ra, de, side_ra, side_dec)
 SelectCircleHTM   | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra, de, radius, extra_clause)
-SelectCircleHEALP | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra, de, radius, extra_clause)
+SelectCircleHEALP | (dest, fieldList, mainTable, indexField, indexOrder, raField, deField, ra, de, radius, extra_clause)
 SelectRectHTM     | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause)
-SelectRectHEALP   | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause)
+SelectRectHEALP   | (dest, fieldList, mainTable, indexField, indexOrder, raField, deField, ra, de, r1, r2, extra_clause)
 SelectRectvHTM    | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra1, de1, ra2, de2, extra_clause)
-SelectRectvHEALP  | (dest, fieldList, mainTable, indexField, indexDepth, raField, deField, ra1, de1, ra2, de2, extra_clause)
+SelectRectvHEALP  | (dest, fieldList, mainTable, indexField, indexOrder, raField, deField, ra1, de1, ra2, de2, extra_clause)
 
 Note that stored procedures are bounded to the database where you define them. In our case the database is `SID`.
 
 For some use cases see the [test](test) directory.
 
 ## A test catalogue
-Download the reduced version of the [ASCC 2.5](http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. From a terminal:
+Download the reduced version of the [ASCC 2.5](http://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. From a terminal:
 ```
 shell> mkdir ~/sid_data
 shell> cd ~/sid_data
-shell> wget http://ross2.iasfbo.inaf.it/test-data/ascc25_initial.sql.gz
+shell> wget http://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz
 shell> gunzip ascc25_initial.sql.gz
 ```
 
@@ -239,6 +239,6 @@ mysql> describe ascc25_initial;
 +---------------+-----------------------+------+-----+---------+-------+
 10 rows in set (0.00 sec)
 ```
-A reduced version of the Tycho-2 catalogue is also available [here](http://ross2.iasfbo.inaf.it/test-data/tycho2.sql.gz), but any set of data with spherical coordinates can be used.
+A reduced version of the Tycho-2 catalogue is also available [here](http://ross2.oas.inaf.it/test-data/tycho2.sql.gz), but any set of data with spherical coordinates can be used.
 
 See use cases in the [test](test) directory.
