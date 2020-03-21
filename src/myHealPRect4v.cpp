@@ -34,7 +34,7 @@
   05/07/2016: Use Healpix_Base version 3. First version.
 
 
-  LN@IASF-INAF, May 2016                        Last change: 21/03/2017
+  LN@IASF-INAF, May 2016                        Last change: 21/03/2020
 */
 
 #include <algorithm>
@@ -157,7 +157,8 @@ int myHealPRect4v(int nested, int k, const double ra[4], const double de[4],
 #endif
 
 // maximum angular distance between any pixel center and its corners, in deg
-  double mpr = base->max_pixrad() / DEG2RAD;
+// Mar. 2020 -> incrementated by 50%
+  double mpr = base->max_pixrad() / DEG2RAD * 1.5;
 
 // Decrease by the max pix. radius. This would give all pixel (approx ?!)
 // fully covered by the rectangle.
