@@ -33,7 +33,7 @@ CREATE PROCEDURE CreateRegion(IN p CHAR(16), IN ord INTEGER)
 
 
 DROP PROCEDURE IF EXISTS CreateRect_HTM//
-CREATE PROCEDURE CreateRect_HTM(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN side_ra FLOAT, IN side_de FLOAT)
+CREATE PROCEDURE CreateRect_HTM(IN ord INTEGER, IN ra DOUBLE, IN de DOUBLE, IN side_ra DOUBLE, IN side_de DOUBLE)
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
@@ -43,7 +43,7 @@ CREATE PROCEDURE CreateRect_HTM(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN sid
 
 
 DROP PROCEDURE IF EXISTS CreateRectv_HTM//
-CREATE PROCEDURE CreateRectv_HTM(IN ord INTEGER, IN ra1 FLOAT, IN de1 FLOAT, IN ra2 FLOAT, IN de2 FLOAT)
+CREATE PROCEDURE CreateRectv_HTM(IN ord INTEGER, IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE)
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
@@ -53,7 +53,7 @@ CREATE PROCEDURE CreateRectv_HTM(IN ord INTEGER, IN ra1 FLOAT, IN de1 FLOAT, IN 
 
 
 DROP PROCEDURE IF EXISTS CreateCircle_HTM//
-CREATE PROCEDURE CreateCircle_HTM(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN rad FLOAT)
+CREATE PROCEDURE CreateCircle_HTM(IN ord INTEGER, IN ra DOUBLE, IN de DOUBLE, IN rad DOUBLE)
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
@@ -63,7 +63,7 @@ CREATE PROCEDURE CreateCircle_HTM(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN r
 
 
 DROP PROCEDURE IF EXISTS CreateRect_HEALP//
-CREATE PROCEDURE CreateRect_HEALP(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN side_ra FLOAT, IN side_de FLOAT)
+CREATE PROCEDURE CreateRect_HEALP(IN ord INTEGER, IN ra DOUBLE, IN de DOUBLE, IN side_ra DOUBLE, IN side_de DOUBLE)
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
@@ -73,7 +73,7 @@ CREATE PROCEDURE CreateRect_HEALP(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN s
 
 
 DROP PROCEDURE IF EXISTS CreateRectv_HEALP//
-CREATE PROCEDURE CreateRectv_HEALP(IN ord INTEGER, IN ra1 FLOAT, IN de1 FLOAT, IN ra2 FLOAT, IN de2 FLOAT)
+CREATE PROCEDURE CreateRectv_HEALP(IN ord INTEGER, IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE)
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
@@ -83,7 +83,7 @@ CREATE PROCEDURE CreateRectv_HEALP(IN ord INTEGER, IN ra1 FLOAT, IN de1 FLOAT, I
 
 
 DROP PROCEDURE IF EXISTS CreateCircle_HEALP//
-CREATE PROCEDURE CreateCircle_HEALP(IN ord INTEGER, IN ra FLOAT, IN de FLOAT, IN rad FLOAT)
+CREATE PROCEDURE CreateCircle_HEALP(IN ord INTEGER, IN ra DOUBLE, IN de DOUBLE, IN rad DOUBLE)
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
@@ -96,7 +96,7 @@ CREATE PROCEDURE RunSelect(IN destTable VARCHAR(64),
                            IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                            IN Region VARCHAR(50), IN Library VARCHAR(50), IN indexField VARCHAR(50), IN indexDepth INTEGER,
                            IN raField VARCHAR(50), IN deField VARCHAR(50),
-                           IN ra FLOAT, IN de FLOAT, IN r1 FLOAT, IN r2 FLOAT, IN extra_clause VARCHAR(1024))
+                           IN ra DOUBLE, IN de DOUBLE, IN r1 DOUBLE, IN r2 DOUBLE, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
     DECLARE sqlStatement VARCHAR(1024);
@@ -166,7 +166,7 @@ DROP PROCEDURE IF EXISTS SelectCircleHTM//
 CREATE PROCEDURE SelectCircleHTM(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                  IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                  IN raField VARCHAR(50), IN deField VARCHAR(50),
-                                 IN ra FLOAT, IN de FLOAT, IN radius FLOAT, IN extra_clause VARCHAR(1024))
+                                 IN ra DOUBLE, IN de DOUBLE, IN radius DOUBLE, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
     CALL SID.RunSelect(dest, fieldList, mainTable, 'Circle', 'HTM', indexField, indexDepth, raField, deField, ra, de, radius, 0, extra_clause);
@@ -176,7 +176,7 @@ DROP PROCEDURE IF EXISTS SelectRectHTM//
 CREATE PROCEDURE SelectRectHTM(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                IN raField VARCHAR(50), IN deField VARCHAR(50),
-                               IN ra FLOAT, IN de FLOAT, IN r1 FLOAT, IN r2 FLOAT, IN extra_clause VARCHAR(1024))
+                               IN ra DOUBLE, IN de DOUBLE, IN r1 DOUBLE, IN r2 DOUBLE, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
     CALL SID.RunSelect(dest, fieldList, mainTable, 'Rect', 'HTM', indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause);
@@ -186,7 +186,7 @@ DROP PROCEDURE IF EXISTS SelectRectvHTM//
 CREATE PROCEDURE SelectRectvHTM(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                IN raField VARCHAR(50), IN deField VARCHAR(50),
-                               IN ra1 FLOAT, IN de1 FLOAT, IN ra2 FLOAT, IN de2 FLOAT, IN extra_clause VARCHAR(1024))
+                               IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
     CALL SID.RunSelect(dest, fieldList, mainTable, 'Rectv', 'HTM', indexField, indexDepth, raField, deField, ra1, de1, ra2, de2, extra_clause);
@@ -196,7 +196,7 @@ DROP PROCEDURE IF EXISTS SelectCircleHEALP//
 CREATE PROCEDURE SelectCircleHEALP(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                    IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                    IN raField VARCHAR(50), IN deField VARCHAR(50),
-                                   IN ra FLOAT, IN de FLOAT, IN radius FLOAT, IN extra_clause VARCHAR(1024))
+                                   IN ra DOUBLE, IN de DOUBLE, IN radius DOUBLE, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
     CALL SID.RunSelect(dest, fieldList, mainTable, 'Circle', 'HEALP', indexField, indexDepth, raField, deField, ra, de, radius, 0, extra_clause);
@@ -206,7 +206,7 @@ DROP PROCEDURE IF EXISTS SelectRectHEALP//
 CREATE PROCEDURE SelectRectHEALP(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                  IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                  IN raField VARCHAR(50), IN deField VARCHAR(50),
-                                 IN ra FLOAT, IN de FLOAT, IN r1 FLOAT, IN r2 FLOAT, IN extra_clause VARCHAR(1024))
+                                 IN ra DOUBLE, IN de DOUBLE, IN r1 DOUBLE, IN r2 DOUBLE, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
     CALL SID.RunSelect(dest, fieldList, mainTable, 'Rect', 'HEALP', indexField, indexDepth, raField, deField, ra, de, r1, r2, extra_clause);
@@ -216,7 +216,7 @@ DROP PROCEDURE IF EXISTS SelectRectvHEALP//
 CREATE PROCEDURE SelectRectvHEALP(IN dest VARCHAR(64), IN fieldList VARCHAR(1024), IN mainTable VARCHAR(64),
                                  IN indexField VARCHAR(50), IN indexDepth INTEGER,
                                  IN raField VARCHAR(50), IN deField VARCHAR(50),
-                                 IN ra1 FLOAT, IN de1 FLOAT, IN ra2 FLOAT, IN de2 FLOAT, IN extra_clause VARCHAR(1024))
+                                 IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE, IN extra_clause VARCHAR(1024))
   DETERMINISTIC
   BEGIN
     CALL SID.RunSelect(dest, fieldList, mainTable, 'Rectv', 'HEALP', indexField, indexDepth, raField, deField, ra1, de1, ra2, de2, extra_clause);
