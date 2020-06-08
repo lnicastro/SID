@@ -1,6 +1,6 @@
 # SID
 
-Spherical Indexing for Relational Databases
+Spherical Indexing for relational Databases
 
 SID is a set of tools aimed at implementing a powerful indexing system for astronomical
 catalogues and other data with spherical coordinates, stored into MySQL / MariaDB databases.
@@ -29,7 +29,7 @@ However, because several functions are shared with DIF, you can have a look to t
 ## Compile and install
 
 To compile and install the library:
-```
+```shell
 mkdir Build
 cd Build
 cmake ..
@@ -38,7 +38,7 @@ sudo make install
 ```
 
 On Mac OS, if you have compilation errors, try to use the appropriate path for the GNU `c++` (the default `/usr/bin/c++` is an alias for `clang++`), e.g.:
-```
+```shell
 mkdir Build
 cd Build
 cmake -DCMAKE_CXX_COMPILER=/opt/local/bin/c++ ..
@@ -50,11 +50,11 @@ sudo make install
 ## UDFs installation
 
 Import UDFs into MySQL (in the directory `sql`):
-```
-  shell> cd ../sql
-  shell> mysql -u root -p
+```shell
+shell> cd ../sql
+shell> mysql -u root -p
 
-  mysql> source sidinstall.sql
+mysql> source sidinstall.sql
 ```
 
 ## List of functions
@@ -109,59 +109,43 @@ Input sky coordinates units are degrees.
 Spherical distance of two points, e.g. at coordinates (0,0) (1,1) - output is in arcmin:
 ```sql
 mysql> select sphedist(0.0, 0.0, 1.0, 1.0) as d_arcmin;
-+-------------------+
-| 84.85065965712684 |
-+-------------------+
+       84.85065965712684
 ```
 
 HEALPix pixel max size (in arcmin), from center to corner at a given order:
 ```sql
 mysql> select HealPMaxS(8);
-+-------------------+
-| 14.34420720055738 |
-+-------------------+
+       14.34420720055738
 ```
 
 Lookup ID of a sky point (20,30) for HTM and HEALPix (nested scheme) depth / order (here depth=6 and order=8):
 ```sql
 mysql> select HTMLookup(6, 20,30);
-+--------------------+
-|              64152 |
-+--------------------+
+       64152
 
 mysql> select HEALPLookup(1,8, 20,30);
-+------------------------+
-|                  35178 |
-+------------------------+
+       35178
 ```
 
 HEALPix barycenter (center) coordinates for a given scheme, order and pixel ID:
 ```sql
 mysql> select HEALPBary(1,8, 500);
-+-------------------------------+
-| 48.1640625, 6.429418462523309 |
-+-------------------------------+
+       48.1640625, 6.429418462523309
 ```
 
 IDs of the HEALPix pixels touching a given pixel ID (neighbors):
 ```sql
 mysql> select HEALPNeighb(0,8, 1000) as nids_ring;
-+--------------------------------------------+
-| 1091, 999, 912, 829, 913, 1001, 1092, 1187 |
-+--------------------------------------------+
+       1091, 999, 912, 829, 913, 1001, 1092, 1187
 
 mysql> select HEALPNeighb(1,8, 1000) as nids_nest;
-+-------------------------------------------+
-| 957, 959, 1002, 1003, 1001, 995, 994, 951 |
-+-------------------------------------------+
+       957, 959, 1002, 1003, 1001, 995, 994, 951
 ```
 
 IDs of the HTM trixels touching a given pixel ID (neighbors):
 ```sql
 mysql> select HTMNeighb(6, 32768);
-+----------------------------------------------------------------------+
-| 32769, 32770, 32771, 47104, 47106, 47107, 49152, 63488, 63489, 63491 |
-+----------------------------------------------------------------------+
+       32769, 32770, 32771, 47104, 47106, 47107, 49152, 63488, 63489, 63491
 ```
 
 See the documentation (TODO) and the [test](test) directory for more examples.
