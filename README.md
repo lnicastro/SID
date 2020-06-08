@@ -1,6 +1,6 @@
 # SID
 
-Spherical Indexing for Databases
+Spherical Indexing for Relational Databases
 
 SID is a set of tools aimed at implementing a powerful indexing system for astronomical
 catalogues and other data with spherical coordinates, stored into MySQL / MariaDB databases.
@@ -107,75 +107,58 @@ Note that several functions are shared with DIF and are documented [here](https:
 Input sky coordinates units are degrees.  
 
 Spherical distance of two points, e.g. at coordinates (0,0) (1,1) - output is in arcmin:
-```
+```sql
 mysql> select sphedist(0.0, 0.0, 1.0, 1.0) as d_arcmin;
-+-------------------+
-| d_arcmin          |
 +-------------------+
 | 84.85065965712684 |
 +-------------------+
+```
 
-```
 HEALPix pixel max size (in arcmin), from center to corner at a given order:
-```
+```sql
 mysql> select HealPMaxS(8);
-+-------------------+
-| HealPMaxS(8)      |
 +-------------------+
 | 14.34420720055738 |
 +-------------------+
-
 ```
 
 Lookup ID of a sky point (20,30) for HTM and HEALPix (nested scheme) depth / order (here depth=6 and order=8):
-```
+```sql
 mysql> select HTMLookup(6, 20,30);
-+--------------------+
-| HTMLookup(6,20,30) |
 +--------------------+
 |              64152 |
 +--------------------+
 
 mysql> select HEALPLookup(1,8, 20,30);
 +------------------------+
-| HEALPLookup(1,8,20,30) |
-+------------------------+
 |                  35178 |
 +------------------------+
 ```
 
 HEALPix barycenter (center) coordinates for a given scheme, order and pixel ID:
-```
+```sql
 mysql> select HEALPBary(1,8, 500);
-+-------------------------------+
-| HEALPBary(1,8,500)            |
 +-------------------------------+
 | 48.1640625, 6.429418462523309 |
 +-------------------------------+
 ```
 
 IDs of the HEALPix pixels touching a given pixel ID (neighbors):
-```
+```sql
 mysql> select HEALPNeighb(0,8, 1000) as nids_ring;
-+--------------------------------------------+
-| nids_ring                                  |
 +--------------------------------------------+
 | 1091, 999, 912, 829, 913, 1001, 1092, 1187 |
 +--------------------------------------------+
 
 mysql> select HEALPNeighb(1,8, 1000) as nids_nest;
 +-------------------------------------------+
-| nids_nest                                 |
-+-------------------------------------------+
 | 957, 959, 1002, 1003, 1001, 995, 994, 951 |
 +-------------------------------------------+
 ```
 
 IDs of the HTM trixels touching a given pixel ID (neighbors):
-```
+```sql
 mysql> select HTMNeighb(6, 32768);
-+----------------------------------------------------------------------+
-| HTMNeighb(6, 32768)                                                  |
 +----------------------------------------------------------------------+
 | 32769, 32770, 32771, 47104, 47106, 47107, 49152, 63488, 63489, 63491 |
 +----------------------------------------------------------------------+
@@ -186,9 +169,10 @@ See the documentation (TODO) and the [test](test) directory for more examples.
 ## Demo procedures
 
 Import into MySQL the pre-defined SID demo procedures (in the directory `sql`):
-```
+```sql
 mysql> source sid-demo.sql
 ```
+
 Main provided procedures are:
 
  Name             | Input Parameters
@@ -210,7 +194,7 @@ For some use cases see the [test](test) directory.
 
 ## A test catalogue
 Download the reduced version of the [ASCC 2.5](http://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. From a terminal:
-```
+```shell
 shell> mkdir ~/sid_data
 shell> cd ~/sid_data
 shell> wget http://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz
@@ -218,7 +202,7 @@ shell> gunzip ascc25_initial.sql.gz
 ```
 
 Load the data into a database of your choice, e.g. `Catalogs`:
-```
+```sql
 mysql> create database Catalogs;
 mysql> use Catalogs;
 mysql> source ~/sid_data/ascc25_initial.sql
@@ -237,7 +221,6 @@ mysql> describe ascc25_initial;
 | MASTERhpx6    | smallint(5) unsigned  | NO   |     | 0       |       |
 | runningnumber | int(10) unsigned      | NO   |     | 0       |       |
 +---------------+-----------------------+------+-----+---------+-------+
-10 rows in set (0.00 sec)
 ```
 A reduced version of the Tycho-2 catalogue is also available [here](http://ross2.oas.inaf.it/test-data/tycho2.sql.gz), but any set of data with spherical coordinates can be used.
 
