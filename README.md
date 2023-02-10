@@ -13,7 +13,7 @@ source code to compile SID. You only need to have the MySQL header files install
 
 Written to be used on Linux and Mac OS.
 
-## THIS IS WORK IN PROGESS !
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7628445.svg)](https://doi.org/10.5281/zenodo.7628445)
 
 The current version is still a beta release, so please report any problem to the authors.
 Package extended documentation is TODO.
