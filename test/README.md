@@ -1,6 +1,6 @@
 ## SID use cases
 
-The catalogue `ascc25_initial` is available [here](http://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz).
+The catalogue `ascc25_initial` is available [here](https://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz).
 Download, unzip and source the file from a MySQL DB of your choice. You must have run `source sid-demo.sql` too.
 ```sql
 mysql> select sphedist(0.0, 0.0, RAmas/3.6e6, DECmas/3.6e6) as sep_arcmin from ascc25_initial limit 3;
@@ -96,7 +96,7 @@ Procedure parameters are:
 ```
 
 
-Here we use the Tycho-2 catalogue available [here](http://ross2.iasfbo.inaf.it/test-data/tycho2.sql.gz) (the `mysql>` prompt is omitted).
+Here we use the Tycho-2 catalogue available [here](https://ross2.iasfbo.inaf.it/test-data/tycho2.sql.gz) (the `mysql>` prompt is omitted).
 ```sql
 ALTER TABLE tycho2 ADD COLUMN htmID_6 SMALLINT UNSIGNED NOT NULL;
 UPDATE tycho2 SET htmID_6 = HTMLookup(6, RAmas/3.6e6, DECmas/3.6e6);

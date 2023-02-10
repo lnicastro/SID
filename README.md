@@ -177,11 +177,11 @@ Note that stored procedures are bounded to the database where you define them. I
 For some use cases see the [test](test) directory.
 
 ## A test catalogue
-Download the reduced version of the [ASCC 2.5](http://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. From a terminal:
+Download the reduced version of the [ASCC 2.5](https://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz) star catalogue in a working directory, say `sid_data`. From a terminal:
 ```shell
 shell> mkdir ~/sid_data
 shell> cd ~/sid_data
-shell> wget http://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz
+shell> wget https://ross2.oas.inaf.it/test-data/ascc25_initial.sql.gz
 shell> gunzip ascc25_initial.sql.gz
 ```
 
@@ -206,6 +206,6 @@ mysql> describe ascc25_initial;
 | runningnumber | int(10) unsigned      | NO   |     | 0       |       |
 +---------------+-----------------------+------+-----+---------+-------+
 ```
-A reduced version of the Tycho-2 catalogue is also available [here](http://ross2.oas.inaf.it/test-data/tycho2.sql.gz), but any set of data with spherical coordinates can be used.
+A reduced version of the Tycho-2 catalogue is also available [here](https://ross2.oas.inaf.it/test-data/tycho2.sql.gz), but any set of data with spherical coordinates can be used.
 
 See use cases in the [test](test) directory.
