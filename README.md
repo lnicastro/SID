@@ -17,7 +17,7 @@ Written to be used on Linux and Mac OS.
 
 The current version is still a beta release, so please report any problem to the authors.
 Package extended documentation is TODO.
-However, because several functions are shared with DIF, you can have a look to the document [here](https://github.com/lnicastro/DIF/doc).
+However, because several functions are shared with DIF, you can have a look to the document [here](https://github.com/lnicastro/DIF/tree/master/doc).
 
 
 ## Requirements
@@ -103,7 +103,7 @@ like those you can find in `sid-demo.sql` (see below).
 ## Test installation
 
 **Test some SID functions**: sphedist, HEALPLookup, HTMLookup, etc.
-Note that several functions are shared with DIF and are documented [here](https://github.com/lnicastro/DIF/doc).
+Note that several functions are shared with DIF and are documented [here](https://github.com/lnicastro/DIF/tree/master/doc).
 Input sky coordinates units are degrees.  
 
 Spherical distance of two points, e.g. at coordinates (0,0) (1,1) - output is in arcmin:
