@@ -70,17 +70,19 @@ CREATE DATABASE SID;
 USE SID;
 
 CREATE TABLE SID.tables_htm (
-  dbtable    VARCHAR(500) NOT NULL,
-  RAd_field  VARCHAR(500) NOT NULL,
-  DEd_field  VARCHAR(500) NOT NULL,
-  iorder     INT NOT NULL);
+  dbtable      VARCHAR(500) NOT NULL,
+  RAd_field    VARCHAR(500) NOT NULL,
+  DEd_field    VARCHAR(500) NOT NULL,
+  iorder       INT NOT NULL,
+  pixid_field  VARCHAR(500) NOT NULL);
 CREATE INDEX dbtable ON SID.tables_htm (dbtable);
 
 CREATE TABLE SID.tables_healp (
-  dbtable    VARCHAR(500) NOT NULL,
-  RAd_field  VARCHAR(500) NOT NULL,
-  DEd_field  VARCHAR(500) NOT NULL,
-  iorder     INT NOT NULL);
+  dbtable      VARCHAR(500) NOT NULL,
+  RAd_field    VARCHAR(500) NOT NULL,
+  DEd_field    VARCHAR(500) NOT NULL,
+  iorder       INT NOT NULL,
+  pixid_field  VARCHAR(500) NOT NULL);
 CREATE INDEX dbtable ON SID.tables_healp (dbtable);
 
 
@@ -91,15 +93,21 @@ DROP PROCEDURE IF EXISTS AddHEALPIndex//
 CREATE PROCEDURE AddHEALPIndex(IN dbtable VARCHAR(500), IN RAd_field VARCHAR(500), IN DEd_field VARCHAR(500), IN iorder INT)
   NOT DETERMINISTIC
   BEGIN
-     DECLARE sqlStatement VARCHAR(1024);
-     SET sqlStatement = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN healp', iorder, ' BIGINT NOT NULL');
-     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('UPDATE ', dbtable, ' SET healp', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_field, ', ', DEd_field, ')'); -- 1 means NESTED
-     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbtable, ' (healp', iorder, ')');
-     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('INSERT INTO SID.tables_healp VALUES ("', dbtable, '", "', RAd_field, '", "', DEd_field, '", ', iorder, ')');
-     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     DECLARE ss VARCHAR(1024);
+     IF LOCATE('.', RAd_field) = 0 THEN
+         SET RAd_field = CONCAT(dbtable, '.', RAd_field);
+     END IF;
+     IF LOCATE('.', DEd_field) = 0 THEN
+         SET DEd_field = CONCAT(dbtable, '.', DEd_field);
+     END IF;
+     SET ss = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN healp', iorder, ' BIGINT NOT NULL');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('UPDATE ', dbtable, ' SET healp', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_field, ', ', DEd_field, ')'); -- 1 means NESTED
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbtable, ' (healp', iorder, ')');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('INSERT INTO SID.tables_healp VALUES ("', dbtable, '", "', RAd_field, '", "', DEd_field, '", ', iorder, ', "healp', iorder, '")');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
   END//
 
 
@@ -107,20 +115,26 @@ DROP PROCEDURE IF EXISTS AddHTMIndex//
 CREATE PROCEDURE AddHTMIndex(IN dbtable VARCHAR(500), IN RAd_field VARCHAR(500), IN DEd_field VARCHAR(500), IN iorder INT)
   NOT DETERMINISTIC
   BEGIN
-     DECLARE sqlStatement VARCHAR(1024);
-     SET sqlStatement = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN htm', iorder, ' BIGINT NOT NULL');
-     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('UPDATE ', dbtable, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_field, ', ', DEd_field, ')');
-     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbtable, ' (htm', iorder, ')');
-     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbtable, '", "', RAd_field, '", "', DEd_field, '", ', iorder, ')');
-     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     DECLARE ss VARCHAR(1024);
+     IF LOCATE('.', RAd_field) = 0 THEN
+        SET RAd_field = CONCAT(dbtable, '.', RAd_field);
+     END IF;
+     IF LOCATE('.', DEd_field) = 0 THEN
+        SET DEd_field = CONCAT(dbtable, '.', DEd_field);
+     END IF;
+     SET ss = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN htm', iorder, ' BIGINT NOT NULL');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('UPDATE ', dbtable, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_field, ', ', DEd_field, ')');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbtable, ' (htm', iorder, ')');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbtable, '", "', RAd_field, '", "', DEd_field, '", ', iorder, ', "htm', iorder, '")');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
   END//
 
 
 DROP PROCEDURE IF EXISTS InitRegion//
-CREATE PROCEDURE InitRegion(IN plibrary VARCHAR(20), IN pdbtable VARCHAR(500), IN piorder INT DEFAULT NULL)
+CREATE PROCEDURE InitRegion(IN pdbtable VARCHAR(500), IN plibrary VARCHAR(20) DEFAULT 'HEALP', IN piorder INT DEFAULT NULL)
   NOT DETERMINISTIC
   BEGIN
 
@@ -133,23 +147,24 @@ CREATE PROCEDURE InitRegion(IN plibrary VARCHAR(20), IN pdbtable VARCHAR(500), I
   DROP TABLE IF EXISTS SID.sid_part;
   CREATE TEMPORARY TABLE SID.sid_part (SID_region BIGINT, SID_pixid BIGINT NOT NULL, p1 DOUBLE NOT NULL, p2 DOUBLE NOT NULL, p3 DOUBLE NOT NULL, p4 DOUBLE NOT NULL);
 
-  SET @SID_library   = plibrary;
-  SET @SID_dbtable   = pdbtable;
-  SET @SID_RAd_field = NULL;
-  SET @SID_DEd_field = NULL;
-  SET @SID_iorder    = piorder;
+  SET @SID_library     = plibrary;
+  SET @SID_dbtable     = pdbtable;
+  SET @SID_RAd_field   = NULL;
+  SET @SID_DEd_field   = NULL;
+  SET @SID_iorder      = piorder;
+  SET @SID_pixid_field = NULL;
 
   IF piorder IS NULL THEN
     IF plibrary = 'HTM' THEN
-        SELECT dbtable, RAd_field, DEd_field, iorder INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field, @SID_iorder FROM SID.tables_htm WHERE dbtable = @SID_dbtable ORDER BY iorder DESC LIMIT 1;
+        SELECT dbtable, RAd_field, DEd_field, iorder, pixid_field INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field, @SID_iorder, @SID_pixid_field FROM SID.tables_htm WHERE dbtable = @SID_dbtable ORDER BY iorder DESC LIMIT 1;
     ELSE
-        SELECT dbtable, RAd_field, DEd_field, iorder INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field, @SID_iorder FROM SID.tables_healp WHERE dbtable = @SID_dbtable ORDER BY iorder DESC LIMIT 1;
+        SELECT dbtable, RAd_field, DEd_field, iorder, pixid_field INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field, @SID_iorder, @SID_pixid_field FROM SID.tables_healp WHERE dbtable = @SID_dbtable ORDER BY iorder DESC LIMIT 1;
     END IF;
   ELSE
     IF plibrary = 'HTM' THEN
-        SELECT dbtable, RAd_field, DEd_field INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field FROM SID.tables_htm WHERE dbtable = @SID_dbtable AND iorder = @SID_iorder LIMIT 1;
+        SELECT dbtable, RAd_field, DEd_field, pixid_field INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field, @SID_pixid_field FROM SID.tables_htm WHERE dbtable = @SID_dbtable AND iorder = @SID_iorder LIMIT 1;
     ELSE
-        SELECT dbtable, RAd_field, DEd_field INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field FROM SID.tables_healp WHERE dbtable = @SID_dbtable AND iorder = @SID_iorder LIMIT 1;
+        SELECT dbtable, RAd_field, DEd_field, pixid_field INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field, @SID_pixid_field FROM SID.tables_healp WHERE dbtable = @SID_dbtable AND iorder = @SID_iorder LIMIT 1;
     END IF;
   END IF;
 
@@ -198,7 +213,7 @@ CREATE PROCEDURE AddCone(IN region BIGINT, IN ra DOUBLE, IN de DOUBLE, IN rad DO
     IF @SID_library = 'HTM' THEN
         SET p = SIDCircleHTM(     @SID_iorder, ra, de, rad);
     ELSE
-        SET p = SIDCircleHEALP(1, @SID_iorder, ra, de, rad);
+        SET p = SIDCircleHEALP(1, @SID_iorder, ra, de, rad); -- 1 means NESTED
     END IF;
     CALL SID._AddRegion(region, p, ra, de, rad, 0.);
   END//
@@ -213,7 +228,7 @@ CREATE PROCEDURE AddRectV(IN region BIGINT, IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2
     IF @SID_library = 'HTM' THEN
         SET p = SIDRectvHTM(     @SID_iorder, ra1, de1, ra2, de2);
     ELSE
-        SET p = SIDRectvHEALP(1, @SID_iorder, ra1, de1, ra2, de2);
+        SET p = SIDRectvHEALP(1, @SID_iorder, ra1, de1, ra2, de2); -- 1 means NESTED
     END IF;
     CALL SID._AddRegion(region, p, ra1, de1, ra2, de2);
   END//
@@ -226,15 +241,15 @@ CREATE FUNCTION select_query()
   BEGIN
     DECLARE soutput VARCHAR(1000) DEFAULT NULL;
     SET soutput = CONCAT(         'SELECT ', @SID_dbtable, '.*, SID.sid_full.SID_region FROM ', @SID_dbtable);
-    SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_full ON ', @SID_dbtable, '.', LOWER(@SID_library), @SID_iorder, '=SID.sid_full.sid_pixid\n');
+    SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_full ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.sid_full.sid_pixid\n');
     SET soutput = CONCAT(soutput, 'UNION\n');
     SET soutput = CONCAT(soutput, 'SELECT ', @SID_dbtable, '.*, SID.sid_part.SID_region FROM ', @SID_dbtable);
-    SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_part ON ', @SID_dbtable, '.', LOWER(@SID_library), @SID_iorder, '=SID.sid_part.sid_pixid AND\n');
+    SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_part ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.sid_part.sid_pixid AND\n');
     IF @SID_regiontype = 1 THEN
-        SET soutput = CONCAT(soutput, ' (Sphedist(', @SID_dbtable, '.', @SID_RAd_field, ', ', @SID_dbtable, '.', @SID_DEd_field, ', SID.sid_part.p1, SID.sid_part.p2) <= SID.sid_part.p3);');
+        SET soutput = CONCAT(soutput, ' (Sphedist(', @SID_RAd_field, ', ', @SID_DEd_field, ', SID.sid_part.p1, SID.sid_part.p2) <= SID.sid_part.p3);');
     ELSE
-        SET soutput = CONCAT(soutput, '  ((', @SID_dbtable, '.', @SID_RAd_field, ' BETWEEN SID.sid_part.p1 AND SID.sid_part.p3) AND ');
-        SET soutput = CONCAT(soutput, '   (', @SID_dbtable, '.', @SID_DEd_field, ' BETWEEN SID.sid_part.p2 AND SID.sid_part.p4));');
+        SET soutput = CONCAT(soutput, '  ((', @SID_RAd_field, ' BETWEEN SID.sid_part.p1 AND SID.sid_part.p3) AND ');
+        SET soutput = CONCAT(soutput, '   (', @SID_DEd_field, ' BETWEEN SID.sid_part.p2 AND SID.sid_part.p4));');
     END IF;
     RETURN soutput;
   END//
