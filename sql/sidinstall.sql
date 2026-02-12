@@ -1,22 +1,3 @@
--- Create database and tables
-DROP DATABASE IF EXISTS SID;
-CREATE DATABASE SID;
-USE SID;
-
-CREATE TABLE SID.tables_htm (
-  dbtable    VARCHAR(500) NOT NULL,
-  RAd_field  VARCHAR(500) NOT NULL,
-  DECd_field VARCHAR(500) NOT NULL,
-  iorder     INT NOT NULL);
-CREATE INDEX dbtable ON SID.tables_htm (dbtable);
-
-CREATE TABLE SID.tables_healpix (
-  dbtable    VARCHAR(500) NOT NULL,
-  RAd_field  VARCHAR(500) NOT NULL,
-  DECd_field VARCHAR(500) NOT NULL,
-  iorder     INT NOT NULL);
-CREATE INDEX dbtable ON SID.tables_healpix (dbtable);
-
 -- Create functions
 DROP FUNCTION IF EXISTS HTMLookup;
 DROP FUNCTION IF EXISTS HTMidByName;
@@ -83,69 +64,124 @@ CREATE FUNCTION SIDRectvHEALP returns STRING soname 'libudf_sid.so';
 CREATE FUNCTION Sphedist returns REAL soname 'libudf_sid.so';
 
 
+-- Create database and tables
+DROP DATABASE IF EXISTS SID;
+CREATE DATABASE SID;
+USE SID;
+
+CREATE TABLE SID.tables_htm (
+  dbtable    VARCHAR(500) NOT NULL,
+  RAd_field  VARCHAR(500) NOT NULL,
+  DEd_field  VARCHAR(500) NOT NULL,
+  iorder     INT NOT NULL);
+CREATE INDEX dbtable ON SID.tables_htm (dbtable);
+
+CREATE TABLE SID.tables_healp (
+  dbtable    VARCHAR(500) NOT NULL,
+  RAd_field  VARCHAR(500) NOT NULL,
+  DEd_field  VARCHAR(500) NOT NULL,
+  iorder     INT NOT NULL);
+CREATE INDEX dbtable ON SID.tables_healp (dbtable);
+
+
 -- Create stored procedures
 delimiter //
 
-DROP PROCEDURE IF EXISTS AddHealpixIndex//
-CREATE PROCEDURE AddHealpixIndex(IN dbtable VARCHAR(500), IN RAd_field VARCHAR(500), IN DECd_field VARCHAR(500), IN iorder INT)
+DROP PROCEDURE IF EXISTS AddHEALPIndex//
+CREATE PROCEDURE AddHEALPIndex(IN dbtable VARCHAR(500), IN RAd_field VARCHAR(500), IN DEd_field VARCHAR(500), IN iorder INT)
   NOT DETERMINISTIC
   BEGIN
      DECLARE sqlStatement VARCHAR(1024);
-     SET sqlStatement = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN healpix', iorder, ' BIGINT NOT NULL');
-     SET @sql = sqlStatement; PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('UPDATE ', dbtable, ' SET healpix', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_field, ', ', DECd_field, ')'); -- 1 means NESTED
-     SET @sql = sqlStatement; PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('CREATE INDEX healpix', iorder, ' ON ', dbtable, ' (healpix', iorder, ')');
-     SET @sql = sqlStatement; PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('INSERT INTO SID.tables_healpix VALUES ("', dbtable, '", "', RAd_field, '", "', DECd_field, '", ', iorder, ')');
-     SET @sql = sqlStatement; PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET sqlStatement = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN healp', iorder, ' BIGINT NOT NULL');
+     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET sqlStatement = CONCAT('UPDATE ', dbtable, ' SET healp', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_field, ', ', DEd_field, ')'); -- 1 means NESTED
+     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET sqlStatement = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbtable, ' (healp', iorder, ')');
+     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET sqlStatement = CONCAT('INSERT INTO SID.tables_healp VALUES ("', dbtable, '", "', RAd_field, '", "', DEd_field, '", ', iorder, ')');
+     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
   END//
 
 
 DROP PROCEDURE IF EXISTS AddHTMIndex//
-CREATE PROCEDURE AddHTMIndex(IN dbtable VARCHAR(500), IN RAd_field VARCHAR(500), IN DECd_field VARCHAR(500), IN iorder INT)
+CREATE PROCEDURE AddHTMIndex(IN dbtable VARCHAR(500), IN RAd_field VARCHAR(500), IN DEd_field VARCHAR(500), IN iorder INT)
   NOT DETERMINISTIC
   BEGIN
      DECLARE sqlStatement VARCHAR(1024);
      SET sqlStatement = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN htm', iorder, ' BIGINT NOT NULL');
-     SET @sql = sqlStatement; PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('UPDATE ', dbtable, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_field, ', ', DECd_field, ')');
-     SET @sql = sqlStatement; PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET sqlStatement = CONCAT('UPDATE ', dbtable, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_field, ', ', DEd_field, ')');
+     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
      SET sqlStatement = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbtable, ' (htm', iorder, ')');
-     SET @sql = sqlStatement; PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET sqlStatement = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbtable, '", "', RAd_field, '", "', DECd_field, '", ', iorder, ')');
-     SET @sql = sqlStatement; PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET sqlStatement = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbtable, '", "', RAd_field, '", "', DEd_field, '", ', iorder, ')');
+     PREPARE stmt FROM sqlStatement; EXECUTE stmt; DEALLOCATE PREPARE stmt;
   END//
 
 
-DROP PROCEDURE IF EXISTS ResetRegion//
-CREATE PROCEDURE ResetRegion()
+DROP PROCEDURE IF EXISTS InitRegion//
+CREATE PROCEDURE InitRegion(IN plibrary VARCHAR(20), IN pdbtable VARCHAR(500), IN piorder INT DEFAULT NULL)
   NOT DETERMINISTIC
   BEGIN
-  DROP TABLE IF EXISTS SID.sid;
-  CREATE TEMPORARY TABLE SID.sid (SID_pixid BIGINT not null, SID_isfull TINYINT not null, SID_region INT NOT NULL);
-  END//
+
+  IF plibrary NOT IN ('HTM', 'HEALP') THEN
+    SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = 'Supported libraries are "HTM" and "HEALP"';
+  END IF;
+
+  DROP TABLE IF EXISTS SID.sid_full;
+  CREATE TEMPORARY TABLE SID.sid_full (SID_region BIGINT, SID_pixid BIGINT NOT NULL);
+  DROP TABLE IF EXISTS SID.sid_part;
+  CREATE TEMPORARY TABLE SID.sid_part (SID_region BIGINT, SID_pixid BIGINT NOT NULL, p1 DOUBLE NOT NULL, p2 DOUBLE NOT NULL, p3 DOUBLE NOT NULL, p4 DOUBLE NOT NULL);
+
+  SET @SID_library   = plibrary;
+  SET @SID_dbtable   = pdbtable;
+  SET @SID_RAd_field = NULL;
+  SET @SID_DEd_field = NULL;
+  SET @SID_iorder    = piorder;
+
+  IF piorder IS NULL THEN
+    IF plibrary = 'HTM' THEN
+        SELECT dbtable, RAd_field, DEd_field, iorder INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field, @SID_iorder FROM SID.tables_htm WHERE dbtable = @SID_dbtable ORDER BY iorder DESC LIMIT 1;
+    ELSE
+        SELECT dbtable, RAd_field, DEd_field, iorder INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field, @SID_iorder FROM SID.tables_healp WHERE dbtable = @SID_dbtable ORDER BY iorder DESC LIMIT 1;
+    END IF;
+  ELSE
+    IF plibrary = 'HTM' THEN
+        SELECT dbtable, RAd_field, DEd_field INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field FROM SID.tables_htm WHERE dbtable = @SID_dbtable AND iorder = @SID_iorder LIMIT 1;
+    ELSE
+        SELECT dbtable, RAd_field, DEd_field INTO @SID_dbtable, @SID_RAd_field, @SID_DEd_field FROM SID.tables_healp WHERE dbtable = @SID_dbtable AND iorder = @SID_iorder LIMIT 1;
+    END IF;
+  END IF;
+
+  IF (@SID_RAd_field IS NULL) OR (@SID_DEd_field IS NULL) THEN
+    IF piorder IS NULL THEN
+        SET @errmsg = CONCAT('Table ', pdbtable, ' is not a ', plibrary, ' registered table');
+    ELSE
+        SET @errmsg = CONCAT('Table ', pdbtable, ' does not have a registered ', plibrary, ' index with order ', piorder);
+    END IF;
+    SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = @errmsg;
+  END IF;
+END//
 
 
-DROP PROCEDURE IF EXISTS SelectRegion//
-CREATE PROCEDURE SelectRegion(IN p CHAR(16))
+DROP PROCEDURE IF EXISTS _AddRegion//
+CREATE PROCEDURE _AddRegion(IN region BIGINT, IN p CHAR(16), IN p1 DOUBLE, IN p2 DOUBLE, IN p3 DOUBLE, IN p4 DOUBLE)
   NOT DETERMINISTIC
   BEGIN
-    DECLARE i, countp, countf, region INTEGER;
+    DECLARE i, countp, countf INTEGER;
 
     SET countf = SIDCount(p, 1);
     SET countp = SIDCount(p, 0);
-    SET region = (SELECT IFNULL(MAX(SID_region), 0)+1 FROM SID.sid);
 
     SET i = 0;
     WHILE i < countf DO
-      INSERT INTO SID.sid VALUES (SIDGetID(p, i, 1), 1, region);
+      INSERT INTO SID.sid_full VALUES (region, SIDGetID(p, i, 1));
       SET i = i + 1;
     END WHILE;
 
     SET i = 0;
     WHILE i < countp DO
-      INSERT INTO SID.sid VALUES (SIDGetID(p, i, 0), 0, region);
+      INSERT INTO SID.sid_part VALUES (region, SIDGetID(p, i, 0), p1, p2, p3, p4);
       SET i = i + 1;
     END WHILE;
 
@@ -153,179 +189,54 @@ CREATE PROCEDURE SelectRegion(IN p CHAR(16))
   END//
 
 
--- Create HTM-specific stored procedures
-DROP PROCEDURE IF EXISTS SelectRect_HTM//
-CREATE PROCEDURE SelectRect_HTM(IN ord INTEGER, IN ra DOUBLE, IN de DOUBLE, IN side_ra DOUBLE, IN side_de DOUBLE)
+DROP PROCEDURE IF EXISTS AddCone//
+CREATE PROCEDURE AddCone(IN region BIGINT, IN ra DOUBLE, IN de DOUBLE, IN rad DOUBLE)
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
-    SET p = SIDRectHTM(ord, ra, de, side_ra, side_de);
-    CALL SID.SelectRegion(p);
+    SET @SID_regiontype = 1; -- Cone search
+    IF @SID_library = 'HTM' THEN
+        SET p = SIDCircleHTM(     @SID_iorder, ra, de, rad);
+    ELSE
+        SET p = SIDCircleHEALP(1, @SID_iorder, ra, de, rad);
+    END IF;
+    CALL SID._AddRegion(region, p, ra, de, rad, 0.);
   END//
 
 
-DROP PROCEDURE IF EXISTS SelectRectv_HTM//
-CREATE PROCEDURE SelectRectv_HTM(IN ord INTEGER, IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE)
+DROP PROCEDURE IF EXISTS AddRectV//
+CREATE PROCEDURE AddRectV(IN region BIGINT, IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE)
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
-    SET p = SIDRectvHTM(ord, ra1, de1, ra2, de2);
-    CALL SID.SelectRegion(p);
+    SET @SID_regiontype = 2; -- Rectangle search
+    IF @SID_library = 'HTM' THEN
+        SET p = SIDRectvHTM(     @SID_iorder, ra1, de1, ra2, de2);
+    ELSE
+        SET p = SIDRectvHEALP(1, @SID_iorder, ra1, de1, ra2, de2);
+    END IF;
+    CALL SID._AddRegion(region, p, ra1, de1, ra2, de2);
   END//
 
 
-DROP PROCEDURE IF EXISTS SelectCircle_HTM//
-CREATE PROCEDURE SelectCircle_HTM(IN ord INTEGER, IN ra DOUBLE, IN de DOUBLE, IN rad DOUBLE)
+DROP FUNCTION IF EXISTS select_query//
+CREATE FUNCTION select_query()
+  RETURNS LONGTEXT
   NOT DETERMINISTIC
   BEGIN
-    DECLARE p CHAR(16);
-    SET p = SIDCircleHTM(ord, ra, de, rad);
-    CALL SID.SelectRegion(p);
+    DECLARE soutput VARCHAR(1000) DEFAULT NULL;
+    SET soutput = CONCAT(         'SELECT ', @SID_dbtable, '.*, SID.sid_full.SID_region FROM ', @SID_dbtable);
+    SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_full ON ', @SID_dbtable, '.', LOWER(@SID_library), @SID_iorder, '=SID.sid_full.sid_pixid\n');
+    SET soutput = CONCAT(soutput, 'UNION\n');
+    SET soutput = CONCAT(soutput, 'SELECT ', @SID_dbtable, '.*, SID.sid_part.SID_region FROM ', @SID_dbtable);
+    SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_part ON ', @SID_dbtable, '.', LOWER(@SID_library), @SID_iorder, '=SID.sid_part.sid_pixid AND\n');
+    IF @SID_regiontype = 1 THEN
+        SET soutput = CONCAT(soutput, ' (Sphedist(', @SID_dbtable, '.', @SID_RAd_field, ', ', @SID_dbtable, '.', @SID_DEd_field, ', SID.sid_part.p1, SID.sid_part.p2) <= SID.sid_part.p3);');
+    ELSE
+        SET soutput = CONCAT(soutput, '  ((', @SID_dbtable, '.', @SID_RAd_field, ' BETWEEN SID.sid_part.p1 AND SID.sid_part.p3) AND ');
+        SET soutput = CONCAT(soutput, '   (', @SID_dbtable, '.', @SID_DEd_field, ' BETWEEN SID.sid_part.p2 AND SID.sid_part.p4));');
+    END IF;
+    RETURN soutput;
   END//
-
-
--- Create Healpix-specific stored procedures
-DROP PROCEDURE IF EXISTS SelectRect_HEALPix//
-CREATE PROCEDURE SelectRect_HEALPix(IN ord INTEGER, IN ra DOUBLE, IN de DOUBLE, IN side_ra DOUBLE, IN side_de DOUBLE)
-  NOT DETERMINISTIC
-  BEGIN
-    DECLARE p CHAR(16);
-    SET p = SIDRectHEALP(1, ord, ra, de, side_ra, side_de);
-    CALL SID.SelectRegion(p);
-  END//
-
-
-DROP PROCEDURE IF EXISTS SelectRectv_HEALPix//
-CREATE PROCEDURE SelectRectv_HEALPix(IN ord INTEGER, IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE)
-  NOT DETERMINISTIC
-  BEGIN
-    DECLARE p CHAR(16);
-    SET p = SIDRectvHEALP(1, ord, ra1, de1, ra2, de2);
-    CALL SID.SelectRegion(p);
-  END//
-
-
-DROP PROCEDURE IF EXISTS SelectCircle_HEALPix//
-CREATE PROCEDURE SelectCircle_HEALPix(IN ord INTEGER, IN ra DOUBLE, IN de DOUBLE, IN rad DOUBLE)
-  NOT DETERMINISTIC
-  BEGIN
-    DECLARE p CHAR(16);
-    SET p = SIDCircleHEALP(1, ord, ra, de, rad);
-    CALL SID.SelectRegion(p);
-  END//
-
-
--- Search_query functions
-DROP FUNCTION IF EXISTS ConeSearch_query//
-CREATE FUNCTION ConeSearch_query(IN pdbtable VARCHAR(500), IN ra DOUBLE, IN de DOUBLE, IN rad_arcsec DOUBLE)
-  RETURNS VARCHAR(500)
-  NOT DETERMINISTIC
-  BEGIN
-    DECLARE _output     VARCHAR(500) DEFAULT NULL;
-    DECLARE _dbtable    VARCHAR(500) DEFAULT NULL;
-    DECLARE _RAd_field  VARCHAR(500) DEFAULT NULL;
-    DECLARE _DECd_field VARCHAR(500) DEFAULT NULL;
-    DECLARE _iorder     INT;
-
-    SET _dbtable = NULL;
-    SELECT dbtable, RAd_field, DECd_field, iorder INTO _dbtable, _RAd_field, _DECd_field, _iorder FROM SID.tables_htm WHERE dbtable = pdbtable ORDER BY iorder DESC LIMIT 1;
-    IF (_dbtable IS NOT NULL) THEN
-       SET _output = CONCAT('CALL SID.ResetRegion();\n');
-       SET _output = CONCAT(_output, 'CALL SID.SelectCircle_HTM(', _iorder, ', ', ra, ', ', de, ', ', rad_arcsec / 3600., ');\n');
-       SET _output = CONCAT(_output, 'SELECT ', _dbtable, '.* FROM ', _dbtable);
-       SET _output = CONCAT(_output, ' INNER JOIN SID.sid\n ON ', _dbtable, '.htm', _iorder, '=SID.sid.sid_pixid  AND  (SID.sid.sid_isfull=1 OR\n');
-    END IF;
-
-    SET _dbtable = NULL;
-    SELECT dbtable, RAd_field, DECd_field, iorder INTO _dbtable, _RAd_field, _DECd_field, _iorder FROM SID.tables_healpix WHERE dbtable = pdbtable ORDER BY iorder DESC LIMIT 1;
-    IF (_dbtable IS NOT NULL) THEN
-       SET _output = CONCAT('CALL SID.ResetRegion();\n');
-       SET _output = CONCAT(_output, 'CALL SID.SelectCircle_HEALPix(', _iorder, ', ', ra, ', ', de, ', ', rad_arcsec / 3600., ');\n');
-       SET _output = CONCAT(_output, 'SELECT ', _dbtable, '.* FROM ', _dbtable);
-       SET _output = CONCAT(_output, ' INNER JOIN SID.sid\n ON ', _dbtable, '.healpix', _iorder, '=SID.sid.sid_pixid  AND  (SID.sid.sid_isfull=1 OR\n');
-    END IF;
-
-    IF (_output IS NOT NULL) THEN
-       SET _output = CONCAT(_output, ' (Sphedist(', _dbtable, '.', _RAd_field, ', ', _dbtable, '.', _DECd_field, ', ', ra, ', ', de, ') <= ', rad_arcsec/3600., '));');
-    END IF;
-    RETURN _output;
-  END//
-
-
-DROP FUNCTION IF EXISTS RectSearch_query//
-CREATE FUNCTION RectSearch_query(IN pdbtable VARCHAR(500), IN ra DOUBLE, IN de DOUBLE, IN side_ra_arcsec DOUBLE, IN side_de_arcsec DOUBLE)
-  RETURNS VARCHAR(500)
-  NOT DETERMINISTIC
-  BEGIN
-    DECLARE _output     VARCHAR(500) DEFAULT NULL;
-    DECLARE _dbtable    VARCHAR(500) DEFAULT NULL;
-    DECLARE _RAd_field  VARCHAR(500) DEFAULT NULL;
-    DECLARE _DECd_field VARCHAR(500) DEFAULT NULL;
-    DECLARE _iorder     INT;
-
-    SET _dbtable = NULL;
-    SELECT dbtable, RAd_field, DECd_field, iorder INTO _dbtable, _RAd_field, _DECd_field, _iorder FROM SID.tables_htm WHERE dbtable = pdbtable ORDER BY iorder DESC LIMIT 1;
-    IF (_dbtable IS NOT NULL) THEN
-       SET _output = CONCAT('CALL SID.ResetRegion();\n');
-       SET _output = CONCAT(_output, 'CALL SID.SelectRect_HTM(', _iorder, ', ', ra, ', ', de, ', ', side_ra_arcsec / 3600., ', ', side_de_arcsec / 3600., ');\n');
-       SET _output = CONCAT(_output, 'SELECT ', _dbtable, '.* FROM ', _dbtable);
-       SET _output = CONCAT(_output, ' INNER JOIN SID.sid\n ON ', _dbtable, '.htm', _iorder, '=SID.sid.sid_pixid  AND  (SID.sid.sid_isfull=1 OR\n');
-    END IF;
-
-    SET _dbtable = NULL;
-    SELECT dbtable, RAd_field, DECd_field, iorder INTO _dbtable, _RAd_field, _DECd_field, _iorder FROM SID.tables_healpix WHERE dbtable = pdbtable ORDER BY iorder DESC LIMIT 1;
-    IF (_dbtable IS NOT NULL) THEN
-       SET _output = CONCAT('CALL SID.ResetRegion();\n');
-       SET _output = CONCAT(_output, 'CALL SID.SelectRect_HEALPix(', _iorder, ', ', ra, ', ', de, ', ', side_ra_arcsec / 3600., ', ', side_de_arcsec / 3600., ');\n');
-       SET _output = CONCAT(_output, 'SELECT ', _dbtable, '.* FROM ', _dbtable);
-       SET _output = CONCAT(_output, ' INNER JOIN SID.sid\n ON ', _dbtable, '.healpix', _iorder, '=SID.sid.sid_pixid  AND  (SID.sid.sid_isfull=1 OR\n');
-    END IF;
-
-    IF (_output IS NOT NULL) THEN
-       SET _output = CONCAT(_output, ' ((', _dbtable, '.', _RAd_field, ' BETWEEN ', ra - side_ra_arcsec / 3600. / 2., ' AND ', ra + side_ra_arcsec / 3600. / 2., ') AND ');
-       SET _output = CONCAT(_output, '  (', _dbtable, '.', _DECd_field,' BETWEEN ', de - side_de_arcsec / 3600. / 2., ' AND ', de + side_de_arcsec / 3600. / 2., ')));');
-    END IF;
-
-    RETURN _output;
-  END//
-
-
-DROP FUNCTION IF EXISTS RectvSearch_query//
-CREATE FUNCTION RectvSearch_query(IN pdbtable VARCHAR(500), IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE)
-  RETURNS VARCHAR(500)
-  NOT DETERMINISTIC
-  BEGIN
-    DECLARE _output     VARCHAR(500) DEFAULT NULL;
-    DECLARE _dbtable    VARCHAR(500) DEFAULT NULL;
-    DECLARE _RAd_field  VARCHAR(500) DEFAULT NULL;
-    DECLARE _DECd_field VARCHAR(500) DEFAULT NULL;
-    DECLARE _iorder     INT;
-
-    SET _dbtable = NULL;
-    SELECT dbtable, RAd_field, DECd_field, iorder INTO _dbtable, _RAd_field, _DECd_field, _iorder FROM SID.tables_htm WHERE dbtable = pdbtable ORDER BY iorder DESC LIMIT 1;
-    IF (_dbtable IS NOT NULL) THEN
-       SET _output = CONCAT('CALL SID.ResetRegion();\n');
-       SET _output = CONCAT(_output, 'CALL SID.SelectRectv_HTM(', _iorder, ', ', ra1, ', ', de1, ', ', ra2, ', ', de2, ');\n');
-       SET _output = CONCAT(_output, 'SELECT ', _dbtable, '.* FROM ', _dbtable);
-       SET _output = CONCAT(_output, ' INNER JOIN SID.sid\n ON ', _dbtable, '.htm', _iorder, '=SID.sid.sid_pixid  AND  (SID.sid.sid_isfull=1 OR\n');
-    END IF;
-
-    SET _dbtable = NULL;
-    SELECT dbtable, RAd_field, DECd_field, iorder INTO _dbtable, _RAd_field, _DECd_field, _iorder FROM SID.tables_healpix WHERE dbtable = pdbtable ORDER BY iorder DESC LIMIT 1;
-    IF (_dbtable IS NOT NULL) THEN
-       SET _output = CONCAT('CALL SID.ResetRegion();\n');
-       SET _output = CONCAT(_output, 'CALL SID.SelectRectv_HEALPix(', _iorder, ', ', ra1, ', ', de1, ', ', ra2, ', ', de2, ');\n');
-       SET _output = CONCAT(_output, 'SELECT ', _dbtable, '.* FROM ', _dbtable);
-       SET _output = CONCAT(_output, ' INNER JOIN SID.sid\n ON ', _dbtable, '.healpix', _iorder, '=SID.sid.sid_pixid  AND  (SID.sid.sid_isfull=1 OR\n');
-    END IF;
-
-    IF (_output IS NOT NULL) THEN
-       SET _output = CONCAT(_output, ' ((', _dbtable, '.', _RAd_field, ' BETWEEN ', ra1, ' AND ', ra2, ') AND ');
-       SET _output = CONCAT(_output, '  (', _dbtable, '.', _DECd_field,' BETWEEN ', de1, ' AND ', de2, ')));');
-    END IF;
-
-    RETURN _output;
-  END//
-
 
 delimiter ;
