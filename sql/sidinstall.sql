@@ -89,11 +89,24 @@ CREATE INDEX dbtable ON SID.tables_healp (dbtable);
 -- Create stored procedures
 delimiter //
 
+DROP FUNCTION IF EXISTS ensureDB//
+CREATE FUNCTION ensureDB(IN s VARCHAR(500))
+  RETURNS LONGTEXT
+  NOT DETERMINISTIC
+  BEGIN
+  IF LOCATE('.', s) = 0 THEN
+    SET s = CONCAT(DATABASE(), '.', s);
+  END IF;
+  RETURN s;
+  END//
+
+
 DROP PROCEDURE IF EXISTS AddHEALPIndex//
 CREATE PROCEDURE AddHEALPIndex(IN dbtable VARCHAR(500), IN RAd_field VARCHAR(500), IN DEd_field VARCHAR(500), IN iorder INT)
   NOT DETERMINISTIC
   BEGIN
      DECLARE ss VARCHAR(1024);
+     SET dbtable = ensureDB(dbtable);
      IF LOCATE('.', RAd_field) = 0 THEN
          SET RAd_field = CONCAT(dbtable, '.', RAd_field);
      END IF;
@@ -116,6 +129,7 @@ CREATE PROCEDURE AddHTMIndex(IN dbtable VARCHAR(500), IN RAd_field VARCHAR(500),
   NOT DETERMINISTIC
   BEGIN
      DECLARE ss VARCHAR(1024);
+     SET dbtable = ensureDB(dbtable);
      IF LOCATE('.', RAd_field) = 0 THEN
         SET RAd_field = CONCAT(dbtable, '.', RAd_field);
      END IF;
@@ -137,16 +151,18 @@ DROP PROCEDURE IF EXISTS InitRegion//
 CREATE PROCEDURE InitRegion(IN pdbtable VARCHAR(500), IN plibrary VARCHAR(20) DEFAULT 'HEALP', IN piorder INT DEFAULT NULL)
   NOT DETERMINISTIC
   BEGIN
-
   IF plibrary NOT IN ('HTM', 'HEALP') THEN
     SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = 'Supported libraries are "HTM" and "HEALP"';
   END IF;
 
   DROP TABLE IF EXISTS SID.sid_full;
   CREATE TEMPORARY TABLE SID.sid_full (SID_region BIGINT, SID_pixid BIGINT NOT NULL);
-  DROP TABLE IF EXISTS SID.sid_part;
-  CREATE TEMPORARY TABLE SID.sid_part (SID_region BIGINT, SID_pixid BIGINT NOT NULL, p1 DOUBLE NOT NULL, p2 DOUBLE NOT NULL, p3 DOUBLE NOT NULL, p4 DOUBLE NOT NULL);
+  DROP TABLE IF EXISTS SID.sid_cone;
+  CREATE TEMPORARY TABLE SID.sid_cone (SID_region BIGINT, SID_pixid BIGINT NOT NULL, RAd DOUBLE NOT NULL, DEd DOUBLE NOT NULL, radius DOUBLE NOT NULL);
+  DROP TABLE IF EXISTS SID.sid_rect;
+  CREATE TEMPORARY TABLE SID.sid_rect (SID_region BIGINT, SID_pixid BIGINT NOT NULL, RAd1 DOUBLE NOT NULL, DEd1 DOUBLE NOT NULL, RAd2 DOUBLE NOT NULL, DEd2 DOUBLE NOT NULL);
 
+  SET pdbtable = ensureDB(pdbtable);
   SET @SID_library     = plibrary;
   SET @SID_dbtable     = pdbtable;
   SET @SID_RAd_field   = NULL;
@@ -179,28 +195,17 @@ CREATE PROCEDURE InitRegion(IN pdbtable VARCHAR(500), IN plibrary VARCHAR(20) DE
 END//
 
 
-DROP PROCEDURE IF EXISTS _AddRegion//
-CREATE PROCEDURE _AddRegion(IN region BIGINT, IN p CHAR(16), IN p1 DOUBLE, IN p2 DOUBLE, IN p3 DOUBLE, IN p4 DOUBLE)
+DROP PROCEDURE IF EXISTS _AddFullPixels//
+CREATE PROCEDURE _AddFullPixels(IN region BIGINT, IN p CHAR(16))
   NOT DETERMINISTIC
   BEGIN
-    DECLARE i, countp, countf INTEGER;
-
-    SET countf = SIDCount(p, 1);
-    SET countp = SIDCount(p, 0);
-
+    DECLARE i, cc INTEGER;
+    SET cc = SIDCount(p, 1);
     SET i = 0;
-    WHILE i < countf DO
+    WHILE i < cc DO
       INSERT INTO SID.sid_full VALUES (region, SIDGetID(p, i, 1));
       SET i = i + 1;
     END WHILE;
-
-    SET i = 0;
-    WHILE i < countp DO
-      INSERT INTO SID.sid_part VALUES (region, SIDGetID(p, i, 0), p1, p2, p3, p4);
-      SET i = i + 1;
-    END WHILE;
-
-    SET p = SIDClear(p);
   END//
 
 
@@ -209,28 +214,42 @@ CREATE PROCEDURE AddCone(IN region BIGINT, IN ra DOUBLE, IN de DOUBLE, IN rad DO
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
-    SET @SID_regiontype = 1; -- Cone search
+    DECLARE i, cc INTEGER;
     IF @SID_library = 'HTM' THEN
         SET p = SIDCircleHTM(     @SID_iorder, ra, de, rad);
     ELSE
         SET p = SIDCircleHEALP(1, @SID_iorder, ra, de, rad); -- 1 means NESTED
     END IF;
-    CALL SID._AddRegion(region, p, ra, de, rad, 0.);
+    CALL _AddFullPixels(region, p);
+    SET cc = SIDCount(p, 0);
+    SET i = 0;
+    WHILE i < cc DO
+      INSERT INTO SID.sid_cone VALUES (region, SIDGetID(p, i, 0), ra, de, rad);
+      SET i = i + 1;
+    END WHILE;
+    SET p = SIDClear(p);
   END//
 
 
-DROP PROCEDURE IF EXISTS AddRectV//
-CREATE PROCEDURE AddRectV(IN region BIGINT, IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE)
+DROP PROCEDURE IF EXISTS AddRect//
+CREATE PROCEDURE AddRect(IN region BIGINT, IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE)
   NOT DETERMINISTIC
   BEGIN
     DECLARE p CHAR(16);
-    SET @SID_regiontype = 2; -- Rectangle search
+    DECLARE i, cc INTEGER;
     IF @SID_library = 'HTM' THEN
         SET p = SIDRectvHTM(     @SID_iorder, ra1, de1, ra2, de2);
     ELSE
         SET p = SIDRectvHEALP(1, @SID_iorder, ra1, de1, ra2, de2); -- 1 means NESTED
     END IF;
-    CALL SID._AddRegion(region, p, ra1, de1, ra2, de2);
+    CALL _AddFullPixels(region, p);
+    SET cc = SIDCount(p, 0);
+    SET i = 0;
+    WHILE i < cc DO
+      INSERT INTO SID.sid_rect VALUES (region, SIDGetID(p, i, 0), ra1, de1, ra2, de2);
+      SET i = i + 1;
+    END WHILE;
+    SET p = SIDClear(p);
   END//
 
 
@@ -239,18 +258,43 @@ CREATE FUNCTION select_query()
   RETURNS LONGTEXT
   NOT DETERMINISTIC
   BEGIN
-    DECLARE soutput VARCHAR(1000) DEFAULT NULL;
-    SET soutput = CONCAT(         'SELECT ', @SID_dbtable, '.*, SID.sid_full.SID_region FROM ', @SID_dbtable);
-    SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_full ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.sid_full.sid_pixid\n');
-    SET soutput = CONCAT(soutput, 'UNION\n');
-    SET soutput = CONCAT(soutput, 'SELECT ', @SID_dbtable, '.*, SID.sid_part.SID_region FROM ', @SID_dbtable);
-    SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_part ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.sid_part.sid_pixid AND\n');
-    IF @SID_regiontype = 1 THEN
-        SET soutput = CONCAT(soutput, ' (Sphedist(', @SID_RAd_field, ', ', @SID_DEd_field, ', SID.sid_part.p1, SID.sid_part.p2) <= SID.sid_part.p3);');
-    ELSE
-        SET soutput = CONCAT(soutput, '  ((', @SID_RAd_field, ' BETWEEN SID.sid_part.p1 AND SID.sid_part.p3) AND ');
-        SET soutput = CONCAT(soutput, '   (', @SID_DEd_field, ' BETWEEN SID.sid_part.p2 AND SID.sid_part.p4));');
+    DECLARE soutput VARCHAR(1000) DEFAULT "";
+    DECLARE tmp BIGINT;
+
+    SET tmp = NULL;
+    SELECT sid_pixid INTO tmp FROM SID.sid_full LIMIT 1;
+    IF tmp IS NOT NULL THEN
+        SET soutput = CONCAT(         'SELECT ', @SID_dbtable, '.*, SID.sid_full.SID_region FROM ', @SID_dbtable);
+        SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_full ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.sid_full.sid_pixid\n');
     END IF;
+
+    SET tmp = NULL;
+    SELECT sid_pixid INTO tmp FROM SID.sid_cone LIMIT 1;
+    IF tmp IS NOT NULL THEN
+      IF LENGTH(soutput) > 0 THEN
+          SET soutput = CONCAT(soutput, 'UNION\n');
+      END IF;
+      SET soutput = CONCAT(soutput, 'SELECT ', @SID_dbtable, '.*, SID.sid_cone.SID_region FROM ', @SID_dbtable);
+      SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_cone ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.sid_cone.sid_pixid AND\n');
+      SET soutput = CONCAT(soutput, ' (Sphedist(', @SID_RAd_field, ', ', @SID_DEd_field, ', SID.sid_cone.RAd, SID.sid_cone.DEd) <= SID.sid_cone.radius)\n');
+    END IF;
+
+    SET tmp = NULL;
+    SELECT sid_pixid INTO tmp FROM SID.sid_rect LIMIT 1;
+    IF tmp IS NOT NULL THEN
+      IF LENGTH(soutput) > 0 THEN
+          SET soutput = CONCAT(soutput, 'UNION\n');
+      END IF;
+      SET soutput = CONCAT(soutput, 'SELECT ', @SID_dbtable, '.*, SID.sid_rect.SID_region FROM ', @SID_dbtable);
+      SET soutput = CONCAT(soutput, '  INNER JOIN SID.sid_rect ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.sid_rect.sid_pixid AND\n');
+      SET soutput = CONCAT(soutput, '  ((', @SID_RAd_field, ' BETWEEN SID.sid_rect.RAd1 AND SID.sid_rect.RAd2) AND ');
+      SET soutput = CONCAT(soutput, '   (', @SID_DEd_field, ' BETWEEN SID.sid_rect.DEd1 AND SID.sid_rect.DEd2))');
+    END IF;
+
+    IF LENGTH(soutput) = 0 THEN
+        SET soutput = CONCAT('SELECT ', @SID_dbtable, '.*, NULL AS SID_region FROM ', @SID_dbtable, ' LIMIT 0');
+    END IF;
+
     RETURN soutput;
   END//
 
