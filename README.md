@@ -9,7 +9,7 @@ pixelization schemas and it allows very fast query execution even on billion-row
 The library is mostly derived from [DIF](https://github.com/lnicastro/DIF), with the main
 difference being its fully UDFs structure. This means that it is not necessary to install
 a dedicated storage engine (like in DIF) and consequently it is not requested to use the MySQL
-source code to compile SID. You only need to have the MySQL header files installed together with `mysql_config`. See e.g. the [MySQL documentation](https://dev.mysql.com/doc/refman/8.0/en/adding-functions.html).
+source code to compile SID. You only need to have the MySQL or MariaDB header files installed together with `mysql_config`. See e.g. the [MySQL documentation](https://dev.mysql.com/doc/refman/8.0/en/adding-functions.html).
 
 Written to be used on Linux and Mac OS.
 
@@ -149,6 +149,52 @@ mysql> select HTMNeighb(6, 32768);
 ```
 
 See the documentation (TODO) and the [test](test) directory for more examples.
+
+
+## Usage
+
+The `sidinstall.sql` script creates the `SID.Messier` table containing the entire Messier catalogue, to be used to test SID functionalities.
+
+### Create HTM and HEALPix indices
+
+```sql
+CALL SID.AddHTMIndex("SID.Messier", "ra", "decl", 8);
+CALL SID.AddHEALPIndex("SID.Messier", "ra", "decl", 6);
+CALL SID.AddHEALPIndex("SID.Messier", "ra", "decl", 10);
+```
+Note that we created one HTM index and two HEALPix indices (with different depths).
+
+The above statements are also used to let SID know that a suitable index is installed on those tables.  To check which tables are registered within SID just type:
+```sql
+SELECT * FROM SID.tables_htm;
+SELECT * FROM SID.tables_healp;
+```
+
+### Search using SID
+
+To exploit SID indexing you need to follow three steps:
+
+1: Initialize the search region, by specifying which table you want to search, and optionally which schema among HTM or HEALPix, and which depth.  Typical commands are as follows:
+```sql
+CALL SID.InitSearch('SID.Messier');               -- if not specified, use HEALPix scheme with highest available depth (10)
+CALL SID.InitSearch('SID.Messier', 'HTM');        -- use HTM scheme with the only available depth (8)
+CALL SID.InitSearch('SID.Messier', 'HEALP');      -- use HEALPix scheme with highest available depth (10)
+CALL SID.InitSearch('SID.Messier', 'HEALP', 6);   -- use HEALPix scheme with depth 6
+```
+Note that a table needs to be registered with `AddHTMIndex` or `AddHEALPIndex` before executing `InitSearch`.
+
+2: Specify the search region using `AddCone` or `AddRect` (any combination of the two is allowed), e.g.:
+```sql
+CALL SID.AddCone(1, 10, 40, 2 * 60); -- arguments are: region ID, RA [deg], Dec [deg], radius [arcmin]
+CALL SID.AddRect(2, 0, -5, 360, 5);  -- arguments are: region ID, RA [deg] min, Dec [deg] min, RA [deg] max, Dec [deg] max
+```
+
+3: Run the search query.  Depending on the specified region(s) the SQL query can become rather long, hence SID provides the `get_query` function to obtan the entire SQL code ready to use:
+```sql
+SET @sql = SID.get_query();
+EXECUTE IMMEDIATE @sql;
+```
+
 
 ## Demo procedures
 
