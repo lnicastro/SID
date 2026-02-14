@@ -1,0 +1,298 @@
+USE SID;
+
+-- Create functions
+DROP FUNCTION IF EXISTS HTMLookup;
+DROP FUNCTION IF EXISTS HTMidByName;
+DROP FUNCTION IF EXISTS HTMnameById;
+DROP FUNCTION IF EXISTS HTMBary;
+DROP FUNCTION IF EXISTS HTMBaryC;
+DROP FUNCTION IF EXISTS HTMNeighb;
+DROP FUNCTION IF EXISTS HTMsNeighb;
+DROP FUNCTION IF EXISTS HTMNeighbC;
+DROP FUNCTION IF EXISTS HTMBaryDist;
+
+DROP FUNCTION IF EXISTS HEALPLookup;
+DROP FUNCTION IF EXISTS HEALPMaxS;
+DROP FUNCTION IF EXISTS HEALPBaryDist;
+DROP FUNCTION IF EXISTS HEALPBary;
+DROP FUNCTION IF EXISTS HEALPBaryC;
+DROP FUNCTION IF EXISTS HEALPNeighb;
+DROP FUNCTION IF EXISTS HEALPNeighbC;
+DROP FUNCTION IF EXISTS HEALPBound;
+DROP FUNCTION IF EXISTS HEALPBoundC;
+
+DROP FUNCTION IF EXISTS SIDCount;
+DROP FUNCTION IF EXISTS SIDGetID;
+DROP FUNCTION IF EXISTS SIDClear;
+DROP FUNCTION IF EXISTS SIDCircleHTM;
+DROP FUNCTION IF EXISTS SIDRectHTM;
+DROP FUNCTION IF EXISTS SIDRectvHTM;
+DROP FUNCTION IF EXISTS SIDCircleHEALP;
+DROP FUNCTION IF EXISTS SIDRectHEALP;
+DROP FUNCTION IF EXISTS SIDRectvHEALP;
+
+DROP FUNCTION IF EXISTS Sphedist;
+
+CREATE FUNCTION HTMLookup returns INT soname 'libudf_sid.so';
+CREATE FUNCTION HTMidByName returns INT soname 'libudf_sid.so';
+CREATE FUNCTION HTMnameById returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HTMBary returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HTMBaryC returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HTMNeighb returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HTMsNeighb returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HTMNeighbC returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HTMBaryDist returns REAL soname 'libudf_sid.so';
+
+CREATE FUNCTION HEALPLookup returns INT soname 'libudf_sid.so';
+CREATE FUNCTION HEALPMaxS returns REAL soname 'libudf_sid.so';
+CREATE FUNCTION HEALPBaryDist returns REAL soname 'libudf_sid.so';
+CREATE FUNCTION HEALPBary returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HEALPBaryC returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HEALPNeighb returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HEALPNeighbC returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HEALPBound returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION HEALPBoundC returns STRING soname 'libudf_sid.so';
+
+CREATE FUNCTION SIDCount returns INT soname 'libudf_sid.so';
+CREATE FUNCTION SIDGetID returns INT soname 'libudf_sid.so';
+CREATE FUNCTION SIDClear returns INT soname 'libudf_sid.so';
+CREATE FUNCTION SIDCircleHTM returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION SIDRectHTM returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION SIDRectvHTM returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION SIDCircleHEALP returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION SIDRectHEALP returns STRING soname 'libudf_sid.so';
+CREATE FUNCTION SIDRectvHEALP returns STRING soname 'libudf_sid.so';
+
+CREATE FUNCTION Sphedist returns REAL soname 'libudf_sid.so';
+
+
+-- Create stored procedures
+delimiter //
+
+CREATE OR REPLACE FUNCTION ensureDB(IN s VARCHAR(500))
+  RETURNS LONGTEXT
+  NOT DETERMINISTIC
+  BEGIN
+  IF LOCATE('.', s) = 0 THEN
+    SET s = CONCAT(DATABASE(), '.', s);
+  END IF;
+  RETURN s;
+  END//
+
+
+CREATE OR REPLACE PROCEDURE AddHEALPIndex(IN dbtable VARCHAR(500), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
+  NOT DETERMINISTIC
+  BEGIN
+     DECLARE ss VARCHAR(1024);
+     SET dbtable = ensureDB(dbtable);
+     IF LOCATE('.', RAd_expr) = 0 THEN
+         SET RAd_expr = CONCAT(dbtable, '.', RAd_expr);
+     END IF;
+     IF LOCATE('.', DEd_expr) = 0 THEN
+         SET DEd_expr = CONCAT(dbtable, '.', DEd_expr);
+     END IF;
+     SET ss = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN healp', iorder, ' BIGINT NOT NULL');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('UPDATE ', dbtable, ' SET healp', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_expr, ', ', DEd_expr, ')'); -- 1 means NESTED
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbtable, ' (healp', iorder, ')');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('INSERT INTO SID.tables_healp VALUES ("', dbtable, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "healp', iorder, '")');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+  END//
+
+
+CREATE OR REPLACE PROCEDURE AddHTMIndex(IN dbtable VARCHAR(500), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
+  NOT DETERMINISTIC
+  BEGIN
+     DECLARE ss VARCHAR(1024);
+     SET dbtable = ensureDB(dbtable);
+     IF LOCATE('.', RAd_expr) = 0 THEN
+        SET RAd_expr = CONCAT(dbtable, '.', RAd_expr);
+     END IF;
+     IF LOCATE('.', DEd_expr) = 0 THEN
+        SET DEd_expr = CONCAT(dbtable, '.', DEd_expr);
+     END IF;
+     SET ss = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN htm', iorder, ' BIGINT NOT NULL');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('UPDATE ', dbtable, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_expr, ', ', DEd_expr, ')');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbtable, ' (htm', iorder, ')');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbtable, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "htm', iorder, '")');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+  END//
+
+
+CREATE OR REPLACE PROCEDURE InitSearch(IN pdbtable VARCHAR(500), IN plibrary VARCHAR(20) DEFAULT 'HEALP', IN piorder INT DEFAULT NULL)
+  NOT DETERMINISTIC
+  BEGIN
+  DECLARE tmp VARCHAR(500);
+
+  IF plibrary NOT IN ('HTM', 'HEALP') THEN
+    SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = 'Supported libraries are "HTM" and "HEALP"';
+  END IF;
+
+  DROP TABLE IF EXISTS SID.regions_full;
+  CREATE TEMPORARY TABLE SID.regions_full (SID_region BIGINT, SID_pixid BIGINT NOT NULL);
+  DROP TABLE IF EXISTS SID.regions_cone;
+  CREATE TEMPORARY TABLE SID.regions_cone (SID_region BIGINT, SID_pixid BIGINT NOT NULL, RAd DOUBLE NOT NULL, DEd DOUBLE NOT NULL, radius_arcmin DOUBLE NOT NULL);
+  DROP TABLE IF EXISTS SID.regions_rect;
+  CREATE TEMPORARY TABLE SID.regions_rect (SID_region BIGINT, SID_pixid BIGINT NOT NULL, RAd1 DOUBLE NOT NULL, DEd1 DOUBLE NOT NULL, RAd2 DOUBLE NOT NULL, DEd2 DOUBLE NOT NULL);
+
+  SET pdbtable = ensureDB(pdbtable);
+  SET @SID_library     = plibrary;
+  SET @SID_dbtable     = pdbtable;
+  SET @SID_RAd_expr    = NULL;
+  SET @SID_DEd_expr    = NULL;
+  SET @SID_iorder      = piorder;
+  SET @SID_pixid_field = NULL;
+
+  IF piorder IS NULL THEN
+    IF plibrary = 'HTM' THEN
+        SELECT dbtable, RAd_expr, DEd_expr, iorder, pixid_field INTO @SID_dbtable, @SID_RAd_expr, @SID_DEd_expr, @SID_iorder, @SID_pixid_field FROM SID.tables_htm WHERE dbtable = @SID_dbtable ORDER BY iorder DESC LIMIT 1;
+    ELSE
+        SELECT dbtable, RAd_expr, DEd_expr, iorder, pixid_field INTO @SID_dbtable, @SID_RAd_expr, @SID_DEd_expr, @SID_iorder, @SID_pixid_field FROM SID.tables_healp WHERE dbtable = @SID_dbtable ORDER BY iorder DESC LIMIT 1;
+    END IF;
+  ELSE
+    IF plibrary = 'HTM' THEN
+        SELECT dbtable, RAd_expr, DEd_expr, pixid_field INTO @SID_dbtable, @SID_RAd_expr, @SID_DEd_expr, @SID_pixid_field FROM SID.tables_htm WHERE dbtable = @SID_dbtable AND iorder = @SID_iorder LIMIT 1;
+    ELSE
+        SELECT dbtable, RAd_expr, DEd_expr, pixid_field INTO @SID_dbtable, @SID_RAd_expr, @SID_DEd_expr, @SID_pixid_field FROM SID.tables_healp WHERE dbtable = @SID_dbtable AND iorder = @SID_iorder LIMIT 1;
+    END IF;
+  END IF;
+
+  IF (@SID_RAd_expr IS NULL) OR (@SID_DEd_expr IS NULL) THEN
+    IF piorder IS NULL THEN
+        SET @errmsg = CONCAT('Table ', pdbtable, ' is not a ', plibrary, ' registered table');
+    ELSE
+        SET @errmsg = CONCAT('Table ', pdbtable, ' does not have a registered ', plibrary, ' index with order ', piorder);
+    END IF;
+    SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = @errmsg;
+  END IF;
+
+  SET tmp = CONCAT('SHOW INDEX FROM ', @SID_dbtable, ' WHERE Key_name = "', @SID_pixid_field, '"');
+  EXECUTE IMMEDIATE tmp;
+
+  SELECT @SID_dbtable, @SID_RAd_expr, @SID_DEd_expr, @SID_pixid_field, @SID_library, @SID_iorder;
+END//
+
+
+CREATE OR REPLACE PROCEDURE _AddFullPixels(IN region BIGINT, IN p CHAR(16))
+  NOT DETERMINISTIC
+  BEGIN
+    DECLARE i, cc INTEGER;
+    SET cc = SIDCount(p, 1);
+    SET i = 0;
+    WHILE i < cc DO
+      INSERT INTO SID.regions_full VALUES (region, SIDGetID(p, i, 1));
+      SET i = i + 1;
+    END WHILE;
+  END//
+
+
+CREATE OR REPLACE PROCEDURE AddCone(IN region BIGINT, IN ra DOUBLE, IN de DOUBLE, IN radius_arcmin DOUBLE)
+  NOT DETERMINISTIC
+  BEGIN
+    DECLARE p CHAR(16);
+    DECLARE i, cc INTEGER;
+    IF @SID_library = 'HTM' THEN
+        SET p = SIDCircleHTM(     @SID_iorder, ra, de, radius_arcmin);
+    ELSE
+        SET p = SIDCircleHEALP(1, @SID_iorder, ra, de, radius_arcmin); -- 1 means NESTED
+    END IF;
+    CALL _AddFullPixels(region, p);
+    SET cc = SIDCount(p, 0);
+    SET i = 0;
+    WHILE i < cc DO
+      INSERT INTO SID.regions_cone VALUES (region, SIDGetID(p, i, 0), ra, de, radius_arcmin);
+      SET i = i + 1;
+    END WHILE;
+    SET p = SIDClear(p);
+  END//
+
+
+CREATE OR REPLACE PROCEDURE AddRect(IN region BIGINT, IN ra1 DOUBLE, IN de1 DOUBLE, IN ra2 DOUBLE, IN de2 DOUBLE)
+  NOT DETERMINISTIC
+  BEGIN
+    DECLARE p CHAR(16);
+    DECLARE i, cc INTEGER;
+    IF @SID_library = 'HTM' THEN
+        SET p = SIDRectvHTM(     @SID_iorder, ra1, de1, ra2, de2);
+    ELSE
+        SET p = SIDRectvHEALP(1, @SID_iorder, ra1, de1, ra2, de2); -- 1 means NESTED
+    END IF;
+    CALL _AddFullPixels(region, p);
+    SET cc = SIDCount(p, 0);
+    SET i = 0;
+    WHILE i < cc DO
+      INSERT INTO SID.regions_rect VALUES (region, SIDGetID(p, i, 0), ra1, de1, ra2, de2);
+      SET i = i + 1;
+    END WHILE;
+    SET p = SIDClear(p);
+  END//
+
+
+CREATE OR REPLACE FUNCTION get_query(IN pfields VARCHAR(500) DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
+  RETURNS LONGTEXT
+  NOT DETERMINISTIC
+  BEGIN
+    DECLARE soutput VARCHAR(1000) DEFAULT "";
+    DECLARE tmp BIGINT;
+
+    IF pfields IS NULL THEN
+       SET pfields = CONCAT(@SID_dbtable, '.*');
+    END IF;
+
+    SET tmp = NULL;
+    SELECT sid_pixid INTO tmp FROM SID.regions_full LIMIT 1;
+    IF tmp IS NOT NULL THEN
+        SET soutput = CONCAT(soutput, 'SELECT ', pfields, ', SID.regions_full.SID_region FROM ', @SID_dbtable, '\n');
+        SET soutput = CONCAT(soutput, '  INNER JOIN SID.regions_full ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.regions_full.sid_pixid\n');
+        SET soutput = CONCAT(soutput, '  ', where_clause, '\n');
+    END IF;
+
+    SET tmp = NULL;
+    SELECT sid_pixid INTO tmp FROM SID.regions_cone LIMIT 1;
+    IF tmp IS NOT NULL THEN
+      IF LENGTH(soutput) > 0 THEN
+          SET soutput = CONCAT(soutput, 'UNION\n');
+      END IF;
+      SET soutput = CONCAT(soutput, 'SELECT ', pfields, ', SID.regions_cone.SID_region FROM ', @SID_dbtable, '\n');
+      SET soutput = CONCAT(soutput, '  INNER JOIN SID.regions_cone ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.regions_cone.sid_pixid AND\n');
+      SET soutput = CONCAT(soutput, '  (Sphedist(', @SID_RAd_expr, ', ', @SID_DEd_expr, ', SID.regions_cone.RAd, SID.regions_cone.DEd) <= SID.regions_cone.radius_arcmin)\n');
+      SET soutput = CONCAT(soutput, '  ', where_clause, '\n');
+    END IF;
+
+    SET tmp = NULL;
+    SELECT sid_pixid INTO tmp FROM SID.regions_rect LIMIT 1;
+    IF tmp IS NOT NULL THEN
+      IF LENGTH(soutput) > 0 THEN
+          SET soutput = CONCAT(soutput, 'UNION\n');
+      END IF;
+      SET soutput = CONCAT(soutput, 'SELECT ', pfields, ', SID.regions_rect.SID_region FROM ', @SID_dbtable, '\n');
+      SET soutput = CONCAT(soutput, '  INNER JOIN SID.regions_rect ON ', @SID_dbtable, '.', @SID_pixid_field, '=SID.regions_rect.sid_pixid AND\n');
+      SET soutput = CONCAT(soutput, '  ((', @SID_RAd_expr, ' BETWEEN SID.regions_rect.RAd1 AND SID.regions_rect.RAd2) AND \n');
+      SET soutput = CONCAT(soutput, '   (', @SID_DEd_expr, ' BETWEEN SID.regions_rect.DEd1 AND SID.regions_rect.DEd2))\n');
+      SET soutput = CONCAT(soutput, '  ', where_clause, '\n');
+    END IF;
+
+    IF LENGTH(soutput) = 0 THEN
+        SET soutput = CONCAT('SELECT ', pfields, ', NULL AS SID_region FROM ', @SID_dbtable, ' ', where_clause, ' LIMIT 0');
+    ELSE
+        SET soutput = CONCAT('\n', soutput);
+    END IF;
+
+    RETURN soutput;
+  END//
+
+
+CREATE OR REPLACE procedure run_query(IN pfields VARCHAR(500) DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
+  NOT DETERMINISTIC
+  BEGIN
+    DECLARE tmp LONGTEXT;
+    SET tmp = get_query(pfields, where_clause);
+    EXECUTE IMMEDIATE tmp;
+  END//
+
+delimiter ;

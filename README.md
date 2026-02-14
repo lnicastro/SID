@@ -54,7 +54,8 @@ Import UDFs into MySQL (in the directory `sql`):
 shell> cd ../sql
 shell> mysql -u root -p
 
-mysql> source sidinstall.sql
+mysql> source sid_create_db.sql
+mysql> source sid_create_udf.sql
 ```
 
 ## List of functions
@@ -153,7 +154,7 @@ See the documentation (TODO) and the [test](test) directory for more examples.
 
 ## Usage
 
-The `sidinstall.sql` script creates the `SID.Messier` table containing the entire Messier catalogue, to be used to test SID functionalities.
+The `sid_create_db.sql` script creates the `SID.Messier` table containing the entire Messier catalogue, to be used to test SID functionalities.
 
 ### Create HTM and HEALPix indices
 
@@ -191,9 +192,18 @@ CALL SID.AddRect(2, 0, -5, 360, 5);  -- arguments are: region ID, RA [deg] min, 
 
 3: Run the search query.  Depending on the specified region(s) the SQL query can become rather long, hence SID provides the `get_query` function to obtan the entire SQL code ready to use:
 ```sql
-SET @sql = SID.get_query();
-EXECUTE IMMEDIATE @sql;
+CALL SID.run_query();
 ```
+You may also pass a list of fields as first argument to `run_query`, as well as a `WHERE` or `LIMIT` clause as second argument, e.g.:
+```sql
+CALL SID.run_query('Messier.M', 'WHERE Messier.M > 100');
+```
+
+Finally, you may inspect the query being executed with:
+```sql
+SELECT SID.get_query();
+```
+Note that `get_query` accepts the same arguments as `run_query`.
 
 
 ## Demo procedures
