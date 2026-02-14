@@ -73,54 +73,10 @@ CREATE OR REPLACE FUNCTION ensureDB(IN s VARCHAR(500))
   RETURNS LONGTEXT
   NOT DETERMINISTIC
   BEGIN
-  IF LOCATE('.', s) = 0 THEN
-    SET s = CONCAT(DATABASE(), '.', s);
-  END IF;
-  RETURN s;
-  END//
-
-
-CREATE OR REPLACE PROCEDURE AddHEALPIndex(IN dbtable VARCHAR(500), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
-  NOT DETERMINISTIC
-  BEGIN
-     DECLARE ss VARCHAR(1024);
-     SET dbtable = ensureDB(dbtable);
-     IF LOCATE('.', RAd_expr) = 0 THEN
-         SET RAd_expr = CONCAT(dbtable, '.', RAd_expr);
-     END IF;
-     IF LOCATE('.', DEd_expr) = 0 THEN
-         SET DEd_expr = CONCAT(dbtable, '.', DEd_expr);
-     END IF;
-     SET ss = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN healp', iorder, ' BIGINT NOT NULL');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('UPDATE ', dbtable, ' SET healp', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_expr, ', ', DEd_expr, ')'); -- 1 means NESTED
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbtable, ' (healp', iorder, ')');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('INSERT INTO SID.tables_healp VALUES ("', dbtable, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "healp', iorder, '")');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-  END//
-
-
-CREATE OR REPLACE PROCEDURE AddHTMIndex(IN dbtable VARCHAR(500), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
-  NOT DETERMINISTIC
-  BEGIN
-     DECLARE ss VARCHAR(1024);
-     SET dbtable = ensureDB(dbtable);
-     IF LOCATE('.', RAd_expr) = 0 THEN
-        SET RAd_expr = CONCAT(dbtable, '.', RAd_expr);
-     END IF;
-     IF LOCATE('.', DEd_expr) = 0 THEN
-        SET DEd_expr = CONCAT(dbtable, '.', DEd_expr);
-     END IF;
-     SET ss = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN htm', iorder, ' BIGINT NOT NULL');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('UPDATE ', dbtable, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_expr, ', ', DEd_expr, ')');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbtable, ' (htm', iorder, ')');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbtable, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "htm', iorder, '")');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    IF LOCATE('.', s) = 0 THEN
+      SET s = CONCAT(DATABASE(), '.', s);
+    END IF;
+    RETURN s;
   END//
 
 
@@ -201,7 +157,7 @@ CREATE OR REPLACE PROCEDURE AddCone(IN region BIGINT, IN ra DOUBLE, IN de DOUBLE
     ELSE
         SET p = SIDCircleHEALP(1, @SID_iorder, ra, de, radius_arcmin); -- 1 means NESTED
     END IF;
-    CALL _AddFullPixels(region, p);
+    CALL SID._AddFullPixels(region, p);
     SET cc = SIDCount(p, 0);
     SET i = 0;
     WHILE i < cc DO
@@ -222,7 +178,7 @@ CREATE OR REPLACE PROCEDURE AddRect(IN region BIGINT, IN ra1 DOUBLE, IN de1 DOUB
     ELSE
         SET p = SIDRectvHEALP(1, @SID_iorder, ra1, de1, ra2, de2); -- 1 means NESTED
     END IF;
-    CALL _AddFullPixels(region, p);
+    CALL SID._AddFullPixels(region, p);
     SET cc = SIDCount(p, 0);
     SET i = 0;
     WHILE i < cc DO
@@ -233,7 +189,7 @@ CREATE OR REPLACE PROCEDURE AddRect(IN region BIGINT, IN ra1 DOUBLE, IN de1 DOUB
   END//
 
 
-CREATE OR REPLACE FUNCTION get_query(IN pfields VARCHAR(500) DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
+CREATE OR REPLACE FUNCTION GetQuery(IN pfields VARCHAR(500) DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
   RETURNS LONGTEXT
   NOT DETERMINISTIC
   BEGIN
@@ -287,12 +243,93 @@ CREATE OR REPLACE FUNCTION get_query(IN pfields VARCHAR(500) DEFAULT NULL, IN wh
   END//
 
 
-CREATE OR REPLACE procedure run_query(IN pfields VARCHAR(500) DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
+CREATE OR REPLACE PROCEDURE RunQuery(IN pfields VARCHAR(500) DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
   NOT DETERMINISTIC
   BEGIN
     DECLARE tmp LONGTEXT;
-    SET tmp = get_query(pfields, where_clause);
+    SET tmp = SID.GetQuery(pfields, where_clause);
     EXECUTE IMMEDIATE tmp;
+  END//
+
+
+CREATE OR REPLACE PROCEDURE PixelizationStats(IN pdb VARCHAR(500), IN ptable VARCHAR(500), IN plibrary VARCHAR(20) DEFAULT 'HEALP', IN piorder INT DEFAULT NULL)
+  NOT DETERMINISTIC
+  BEGIN
+    DECLARE tmp LONGTEXT;
+    DECLARE nrows BIGINT;
+    DECLARE ndistinct BIGINT;
+    DECLARE npixels BIGINT;
+    DECLARE pixelarea DOUBLE;
+    DECLARE footprint DOUBLE;
+    DECLARE skycoverage DOUBLE;
+
+    CALL SID.InitSearch(CONCAT(pdb, '.', ptable), plibrary, piorder);
+    SELECT TABLE_ROWS INTO nrows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=pdb AND TABLE_NAME=ptable;
+
+    SET tmp = CONCAT('SELECT COUNT(DISTINCT ', @SID_pixid_field, ') INTO @SID_tmp FROM ', pdb, '.', ptable);
+    EXECUTE IMMEDIATE tmp;
+    SET ndistinct = @SID_tmp;
+
+    IF @SID_library='HEALP' THEN
+        SET npixels = 12 * POW(POW(2, @SID_iorder), 2);
+    ELSE
+        SET npixels = 8 * POW(4, @SID_iorder);
+    END IF;
+    SET pixelarea = 4 * PI() * POW(180 / PI(), 2) / npixels;
+    SET footprint = ndistinct * pixelarea;
+    SET skycoverage = ndistinct / npixels;
+    SET tmp = CONCAT('SELECT ', ndistinct, ' AS NPixels, ', SQRT(pixelarea) * 3600., ' AS PixelTypicalSize_arcsec, ', pixelarea, ' AS PixelArea_sqdeg, ', footprint, ' AS FootPrint_sqdeg, ', skycoverage, ' AS SkyFraction');
+    EXECUTE IMMEDIATE tmp;
+
+    SET tmp = CONCAT('SELECT T.C AS SourcesInAPixel, COUNT(*) AS Multiplicity, COUNT(*) / ', nrows, ' AS Fraction FROM (SELECT ',
+                     @SID_pixid_field, ', COUNT(*) AS C FROM ', @SID_dbtable, ' GROUP BY ', @SID_pixid_field, ') AS T GROUP BY T.C');
+    EXECUTE IMMEDIATE tmp;
+  END//
+
+
+CREATE OR REPLACE PROCEDURE AddHEALPIndex(IN dbtable VARCHAR(500), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
+  NOT DETERMINISTIC
+  BEGIN
+     DECLARE ss VARCHAR(1024);
+     SET dbtable = ensureDB(dbtable);
+     IF LOCATE('.', RAd_expr) = 0 THEN
+         SET RAd_expr = CONCAT(dbtable, '.', RAd_expr);
+     END IF;
+     IF LOCATE('.', DEd_expr) = 0 THEN
+         SET DEd_expr = CONCAT(dbtable, '.', DEd_expr);
+     END IF;
+     SET ss = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN healp', iorder, ' BIGINT NOT NULL');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('UPDATE ', dbtable, ' SET healp', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_expr, ', ', DEd_expr, ')'); -- 1 means NESTED
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbtable, ' (healp', iorder, ')');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('INSERT INTO SID.tables_healp VALUES ("', dbtable, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "healp', iorder, '")');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     CALL SID.PixelizationStats(dbtable, 'HEALP', iorder);
+  END//
+
+
+CREATE OR REPLACE PROCEDURE AddHTMIndex(IN dbtable VARCHAR(500), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
+  NOT DETERMINISTIC
+  BEGIN
+     DECLARE ss VARCHAR(1024);
+     SET dbtable = ensureDB(dbtable);
+     IF LOCATE('.', RAd_expr) = 0 THEN
+        SET RAd_expr = CONCAT(dbtable, '.', RAd_expr);
+     END IF;
+     IF LOCATE('.', DEd_expr) = 0 THEN
+        SET DEd_expr = CONCAT(dbtable, '.', DEd_expr);
+     END IF;
+     SET ss = CONCAT('ALTER TABLE ', dbtable, ' ADD COLUMN htm', iorder, ' BIGINT NOT NULL');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('UPDATE ', dbtable, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_expr, ', ', DEd_expr, ')');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbtable, ' (htm', iorder, ')');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET ss = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbtable, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "htm', iorder, '")');
+     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     CALL SID.PixelizationStats(dbtable, 'HTM', iorder);
   END//
 
 delimiter ;
