@@ -159,9 +159,9 @@ The `sid_create_db.sql` script creates the `SID.Messier` table containing the en
 ### Create HTM and HEALPix indices
 
 ```sql
-CALL SID.AddHTMIndex("SID.Messier", "ra", "decl", 8);
-CALL SID.AddHEALPIndex("SID.Messier", "ra", "decl", 6);
-CALL SID.AddHEALPIndex("SID.Messier", "ra", "decl", 10);
+CALL SID.AddHTMIndex(  "SID", "Messier", "ra", "decl", 8);
+CALL SID.AddHEALPIndex("SID", "Messier", "ra", "decl", 6);
+CALL SID.AddHEALPIndex("SID", "Messier", "ra", "decl", 10);
 ```
 Note that we created one HTM index and two HEALPix indices (with different depths).
 
@@ -177,10 +177,10 @@ To exploit SID indexing you need to follow three steps:
 
 1: Initialize the search region, by specifying which table you want to search, and optionally which schema among HTM or HEALPix, and which depth.  Typical commands are as follows:
 ```sql
-CALL SID.InitSearch('SID.Messier');               -- if not specified, use HEALPix scheme with highest available depth (10)
-CALL SID.InitSearch('SID.Messier', 'HTM');        -- use HTM scheme with the only available depth (8)
-CALL SID.InitSearch('SID.Messier', 'HEALP');      -- use HEALPix scheme with highest available depth (10)
-CALL SID.InitSearch('SID.Messier', 'HEALP', 6);   -- use HEALPix scheme with depth 6
+CALL SID.InitSearch('SID', 'Messier');               -- if not specified, use HEALPix scheme with highest available depth (10)
+CALL SID.InitSearch('SID', 'Messier', 'HTM');        -- use HTM scheme with the only available depth (8)
+CALL SID.InitSearch('SID', 'Messier', 'HEALP');      -- use HEALPix scheme with highest available depth (10)
+CALL SID.InitSearch('SID', 'Messier', 'HEALP', 6);   -- use HEALPix scheme with depth 6
 ```
 Note that a table needs to be registered with `AddHTMIndex` or `AddHEALPIndex` before executing `InitSearch`.
 
@@ -192,18 +192,18 @@ CALL SID.AddRect(2, 0, -5, 360, 5);  -- arguments are: region ID, RA [deg] min, 
 
 3: Run the search query.  Depending on the specified region(s) the SQL query can become rather long, hence SID provides the `get_query` function to obtan the entire SQL code ready to use:
 ```sql
-CALL SID.run_query();
+CALL SID.RunQuery();
 ```
 You may also pass a list of fields as first argument to `run_query`, as well as a `WHERE` or `LIMIT` clause as second argument, e.g.:
 ```sql
-CALL SID.run_query('Messier.M', 'WHERE Messier.M > 100');
+CALL SID.RunQuery('Messier.M', 'WHERE Messier.M > 100');
 ```
 
 Finally, you may inspect the query being executed with:
 ```sql
-SELECT SID.get_query();
+SELECT SID.GetQuery();
 ```
-Note that `get_query` accepts the same arguments as `run_query`.
+Note that `GetQuery` accepts the same arguments as `RunQuery`.
 
 
 ## Demo procedures

@@ -4,20 +4,20 @@ CREATE DATABASE SID;
 USE SID;
 
 CREATE TABLE SID.tables_htm (
-  dbtable      VARCHAR(500) NOT NULL,
-  RAd_expr     VARCHAR(500) NOT NULL,
-  DEd_expr     VARCHAR(500) NOT NULL,
-  iorder       INT NOT NULL,
-  pixid_field  VARCHAR(500) NOT NULL);
-CREATE INDEX dbtable ON SID.tables_htm (dbtable);
+  dbname      VARCHAR(500) NOT NULL,
+  tablename   VARCHAR(500) NOT NULL,
+  RAd_expr    VARCHAR(500) NOT NULL,
+  DEd_expr    VARCHAR(500) NOT NULL,
+  iorder      INT NOT NULL,
+  pixid_field VARCHAR(500) NOT NULL);
 
 CREATE TABLE SID.tables_healp (
-  dbtable      VARCHAR(500) NOT NULL,
-  RAd_expr     VARCHAR(500) NOT NULL,
-  DEd_expr     VARCHAR(500) NOT NULL,
-  iorder       INT NOT NULL,
-  pixid_field  VARCHAR(500) NOT NULL);
-CREATE INDEX dbtable ON SID.tables_healp (dbtable);
+  dbname      VARCHAR(500) NOT NULL,
+  tablename   VARCHAR(500) NOT NULL,
+  RAd_expr    VARCHAR(500) NOT NULL,
+  DEd_expr    VARCHAR(500) NOT NULL,
+  iorder      INT NOT NULL,
+  pixid_field VARCHAR(500) NOT NULL);
 
 
 CREATE TABLE SID.Messier (
