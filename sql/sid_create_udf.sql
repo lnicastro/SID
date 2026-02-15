@@ -268,12 +268,13 @@ CREATE OR REPLACE PROCEDURE PixelizationStats(IN dbname VARCHAR(100), IN tablena
     SET pixelarea = 4 * PI() * POW(180 / PI(), 2) / npixels;
     SET footprint = ndistinct * pixelarea;
     SET skycoverage = ndistinct / npixels;
-    SET tmp = CONCAT('SELECT ', ndistinct, ' AS NPixels, ', SQRT(pixelarea) * 3600., ' AS PixelTypicalSize_arcsec, ', pixelarea, ' AS PixelArea_sqdeg, ', footprint, ' AS FootPrint_sqdeg, ', skycoverage, ' AS SkyFraction');
+    SET tmp = CONCAT('SELECT ', ndistinct, ' AS NPixels, ', SQRT(pixelarea) * 3600., ' AS PixelTypicalSize_arcsec, ', pixelarea, ' AS PixelArea_sqdeg, ', footprint, ' AS FootprintArea_sqdeg, ', skycoverage, ' AS SkyFraction');
     EXECUTE IMMEDIATE tmp;
 
     SET tmp = CONCAT('SELECT ', @SID_pixid_field, ', COUNT(*) AS C FROM ', @SID_dbname, '.', @SID_tablename, ' GROUP BY ', @SID_pixid_field);
     set tmp = CONCAT('SELECT T.C AS SourcesInAPixel, COUNT(*) AS Multiplicity FROM (', tmp, ') AS T GROUP BY T.C ORDER BY SourcesInAPixel');
     SET tmp = CONCAT('SELECT M.*, M.SourcesInAPixel * M.Multiplicity / ', nrows, ' AS Fraction, SUM(M.SourcesInAPixel * M.Multiplicity) OVER(ORDER BY M.SourcesInAPixel) / ', nrows, ' AS CumulativeFraction FROM (', tmp, ') AS M');
+    SET tmp = CONCAT('SELECT N.* FROM (', tmp, ') AS N WHERE CumulativeFraction <= 0.99');
     EXECUTE IMMEDIATE tmp;
   END//
 
