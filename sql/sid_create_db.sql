@@ -4,20 +4,22 @@ CREATE DATABASE SID;
 USE SID;
 
 CREATE TABLE SID.tables_htm (
-  dbname      VARCHAR(500) NOT NULL,
-  tablename   VARCHAR(500) NOT NULL,
+  dbname      VARCHAR(100) NOT NULL,
+  tablename   VARCHAR(100) NOT NULL,
   RAd_expr    VARCHAR(500) NOT NULL,
   DEd_expr    VARCHAR(500) NOT NULL,
   iorder      INT NOT NULL,
-  pixid_field VARCHAR(500) NOT NULL);
+  pixid_field VARCHAR(100) NOT NULL);
+ALTER table tables_healp ADD PRIMARY KEY (dbname, tablename, pixid_field);
 
 CREATE TABLE SID.tables_healp (
-  dbname      VARCHAR(500) NOT NULL,
-  tablename   VARCHAR(500) NOT NULL,
+  dbname      VARCHAR(100) NOT NULL,
+  tablename   VARCHAR(100) NOT NULL,
   RAd_expr    VARCHAR(500) NOT NULL,
   DEd_expr    VARCHAR(500) NOT NULL,
   iorder      INT NOT NULL,
-  pixid_field VARCHAR(500) NOT NULL);
+  pixid_field VARCHAR(100) NOT NULL);
+ALTER table tables_htm ADD PRIMARY KEY (dbname, tablename, pixid_field);
 
 
 CREATE TABLE SID.Messier (

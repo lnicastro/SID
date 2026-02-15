@@ -69,7 +69,7 @@ CREATE FUNCTION Sphedist returns REAL soname 'libudf_sid.so';
 -- Create stored procedures
 delimiter //
 
-CREATE OR REPLACE PROCEDURE InitSearch(IN pdbname VARCHAR(500), IN ptablename VARCHAR(500), IN plibrary VARCHAR(20) DEFAULT 'HEALP', IN piorder INT DEFAULT NULL)
+CREATE OR REPLACE PROCEDURE InitSearch(IN pdbname VARCHAR(100), IN ptablename VARCHAR(100), IN plibrary VARCHAR(20) DEFAULT 'HEALP', IN piorder INT DEFAULT NULL)
   NOT DETERMINISTIC
   BEGIN
   DECLARE tmp VARCHAR(500);
@@ -241,7 +241,7 @@ CREATE OR REPLACE PROCEDURE RunQuery(IN pfields VARCHAR(500) DEFAULT NULL, IN wh
   END//
 
 
-CREATE OR REPLACE PROCEDURE PixelizationStats(IN dbname VARCHAR(500), IN tablename VARCHAR(500), IN plibrary VARCHAR(20) DEFAULT 'HEALP', IN iorder INT DEFAULT NULL)
+CREATE OR REPLACE PROCEDURE PixelizationStats(IN dbname VARCHAR(100), IN tablename VARCHAR(100), IN plibrary VARCHAR(20) DEFAULT 'HEALP', IN iorder INT DEFAULT NULL)
   NOT DETERMINISTIC
   BEGIN
     DECLARE tmp LONGTEXT;
@@ -270,53 +270,78 @@ CREATE OR REPLACE PROCEDURE PixelizationStats(IN dbname VARCHAR(500), IN tablena
     SET tmp = CONCAT('SELECT ', ndistinct, ' AS NPixels, ', SQRT(pixelarea) * 3600., ' AS PixelTypicalSize_arcsec, ', pixelarea, ' AS PixelArea_sqdeg, ', footprint, ' AS FootPrint_sqdeg, ', skycoverage, ' AS SkyFraction');
     EXECUTE IMMEDIATE tmp;
 
-    SET tmp = CONCAT('SELECT T.C AS SourcesInAPixel, COUNT(*) AS Multiplicity, COUNT(*) / ', nrows, ' AS Fraction FROM (SELECT ',
-                     @SID_pixid_field, ', COUNT(*) AS C FROM ', @SID_dbname, '.', @SID_tablename, ' GROUP BY ', @SID_pixid_field, ') AS T GROUP BY T.C');
+    SET tmp = CONCAT('SELECT T.C AS SourcesInAPixel, COUNT(*) AS Multiplicity, COUNT(*) / ', nrows, ' AS Fraction FROM ',
+                     '(SELECT ', @SID_pixid_field, ', COUNT(*) AS C FROM ', @SID_dbname, '.', @SID_tablename, ' GROUP BY ', @SID_pixid_field, ')',
+		     ' AS T GROUP BY T.C');
     EXECUTE IMMEDIATE tmp;
   END//
 
 
-CREATE OR REPLACE PROCEDURE AddHEALPIndex(IN dbname VARCHAR(500), IN tablename VARCHAR(500), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
+CREATE OR REPLACE PROCEDURE AddHEALPIndex(IN dbname VARCHAR(100), IN tablename VARCHAR(100), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
   NOT DETERMINISTIC
   BEGIN
-     DECLARE ss VARCHAR(1024);
+     DECLARE tmp VARCHAR(1024);
      IF LOCATE('.', RAd_expr) = 0 THEN
          SET RAd_expr = CONCAT(dbname, '.', tablename, '.', RAd_expr);
      END IF;
      IF LOCATE('.', DEd_expr) = 0 THEN
          SET DEd_expr = CONCAT(dbname, '.', tablename, '.', DEd_expr);
      END IF;
-     SET ss = CONCAT('ALTER TABLE ', dbname, '.', tablename, ' ADD COLUMN healp', iorder, ' BIGINT NOT NULL');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('UPDATE ', dbname, '.', tablename, ' SET healp', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_expr, ', ', DEd_expr, ')'); -- 1 means NESTED
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbname, '.', tablename, ' (healp', iorder, ')');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('INSERT INTO SID.tables_healp VALUES ("', dbname, '", "', tablename, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "healp', iorder, '")');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET tmp = CONCAT('ALTER TABLE ', dbname, '.', tablename, ' ADD COLUMN healp', iorder, ' BIGINT NOT NULL');
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('UPDATE ', dbname, '.', tablename, ' SET healp', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_expr, ', ', DEd_expr, ')'); -- 1 means NESTED
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbname, '.', tablename, ' (healp', iorder, ')');
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('INSERT INTO SID.tables_healp VALUES ("', dbname, '", "', tablename, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "healp', iorder, '")');
+     EXECUTE IMMEDIATE tmp;
      CALL SID.PixelizationStats(dbname, tablename, 'HEALP', iorder);
   END//
 
 
-CREATE OR REPLACE PROCEDURE AddHTMIndex(IN dbname VARCHAR(500), IN tablename VARCHAR(500), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
+CREATE OR REPLACE PROCEDURE AddHTMIndex(IN dbname VARCHAR(100), IN tablename VARCHAR(100), IN RAd_expr VARCHAR(500), IN DEd_expr VARCHAR(500), IN iorder INT)
   NOT DETERMINISTIC
   BEGIN
-     DECLARE ss VARCHAR(1024);
+     DECLARE tmp VARCHAR(1024);
      IF LOCATE('.', RAd_expr) = 0 THEN
         SET RAd_expr = CONCAT(dbname, '.', tablename, '.', RAd_expr);
      END IF;
      IF LOCATE('.', DEd_expr) = 0 THEN
         SET DEd_expr = CONCAT(dbname, '.', tablename, '.', DEd_expr);
      END IF;
-     SET ss = CONCAT('ALTER TABLE ', dbname, '.', tablename, ' ADD COLUMN htm', iorder, ' BIGINT NOT NULL');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('UPDATE ', dbname, '.', tablename, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_expr, ', ', DEd_expr, ')');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbname, '.', tablename, ' (htm', iorder, ')');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-     SET ss = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbname, '", "', tablename, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "htm', iorder, '")');
-     PREPARE stmt FROM ss; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+     SET tmp = CONCAT('ALTER TABLE ', dbname, '.', tablename, ' ADD COLUMN htm', iorder, ' BIGINT NOT NULL');
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('UPDATE ', dbname, '.', tablename, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_expr, ', ', DEd_expr, ')');
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbname, '.', tablename, ' (htm', iorder, ')');
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbname, '", "', tablename, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "htm', iorder, '")');
+     EXECUTE IMMEDIATE tmp;
      CALL SID.PixelizationStats(dbname, tablename, 'HTM', iorder);
+  END//
+
+
+CREATE OR REPLACE PROCEDURE DropHEALPIndex(IN pdbname VARCHAR(100), IN ptablename VARCHAR(100), IN piorder INT DEFAULT NULL)
+  NOT DETERMINISTIC
+  BEGIN
+     DECLARE tmp VARCHAR(1024);
+     CALL SID.InitSearch(pdbname, ptablename, 'HEALP', piorder);
+     SET tmp = CONCAT('ALTER TABLE ', @SID_dbname, '.', @SID_tablename, ' DROP COLUMN ', @SID_pixid_field);
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('DELETE FROM SID.tables_healp WHERE dbname="', @SID_dbname, '" AND tablename="', @SID_tablename, '" AND pixid_field="', @SID_pixid_field, '"');
+     EXECUTE IMMEDIATE tmp;
+  END//
+
+
+CREATE OR REPLACE PROCEDURE DropHTMIndex(IN pdbname VARCHAR(100), IN ptablename VARCHAR(100), IN piorder INT DEFAULT NULL)
+  NOT DETERMINISTIC
+  BEGIN
+     DECLARE tmp VARCHAR(1024);
+     CALL SID.InitSearch(pdbname, ptablename, 'HTM', piorder);
+     SET tmp = CONCAT('ALTER TABLE ', @SID_dbname, '.', @SID_tablename, ' DROP COLUMN ', @SID_pixid_field);
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('DELETE FROM SID.tables_htm WHERE dbname="', @SID_dbname, '" AND tablename="', @SID_tablename, '" AND pixid_field="', @SID_pixid_field, '"');
+     EXECUTE IMMEDIATE tmp;
   END//
 
 delimiter ;
