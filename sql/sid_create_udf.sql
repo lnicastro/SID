@@ -119,7 +119,8 @@ CREATE OR REPLACE PROCEDURE InitSearch(IN pdbname VARCHAR(100), IN ptablename VA
   SET tmp = CONCAT('SHOW INDEX FROM ', @SID_dbname, '.', @SID_tablename, ' WHERE Key_name = "', @SID_pixid_field, '"');
   EXECUTE IMMEDIATE tmp;
 
-  SELECT @SID_dbname, @SID_tablename, @SID_RAd_expr, @SID_DEd_expr, @SID_pixid_field, @SID_library, @SID_iorder;
+  SET tmp = CONCAT('SELECT * FROM SID.tables_', LOWER(@SID_library), ' WHERE dbname="', @SID_dbname, '" AND tablename="', @SID_tablename, '" AND pixid_field="', @SID_pixid_field, '"');
+  EXECUTE IMMEDIATE tmp;
 END//
 
 
@@ -270,9 +271,9 @@ CREATE OR REPLACE PROCEDURE PixelizationStats(IN dbname VARCHAR(100), IN tablena
     SET tmp = CONCAT('SELECT ', ndistinct, ' AS NPixels, ', SQRT(pixelarea) * 3600., ' AS PixelTypicalSize_arcsec, ', pixelarea, ' AS PixelArea_sqdeg, ', footprint, ' AS FootPrint_sqdeg, ', skycoverage, ' AS SkyFraction');
     EXECUTE IMMEDIATE tmp;
 
-    SET tmp = CONCAT('SELECT T.C AS SourcesInAPixel, COUNT(*) AS Multiplicity, COUNT(*) / ', nrows, ' AS Fraction FROM ',
-                     '(SELECT ', @SID_pixid_field, ', COUNT(*) AS C FROM ', @SID_dbname, '.', @SID_tablename, ' GROUP BY ', @SID_pixid_field, ')',
-		     ' AS T GROUP BY T.C');
+    SET tmp = CONCAT('SELECT ', @SID_pixid_field, ', COUNT(*) AS C FROM ', @SID_dbname, '.', @SID_tablename, ' GROUP BY ', @SID_pixid_field);
+    set tmp = CONCAT('SELECT T.C AS SourcesInAPixel, COUNT(*) AS Multiplicity FROM (', tmp, ') AS T GROUP BY T.C ORDER BY SourcesInAPixel');
+    SET tmp = CONCAT('SELECT M.*, M.SourcesInAPixel * M.Multiplicity / ', nrows, ' AS Fraction, SUM(M.SourcesInAPixel * M.Multiplicity) OVER(ORDER BY M.SourcesInAPixel) / ', nrows, ' AS CumulativeFraction FROM (', tmp, ') AS M');
     EXECUTE IMMEDIATE tmp;
   END//
 
