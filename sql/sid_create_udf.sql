@@ -273,8 +273,7 @@ CREATE OR REPLACE PROCEDURE PixelizationStats(IN dbname VARCHAR(100), IN tablena
 
     SET tmp = CONCAT('SELECT ', @SID_pixid_field, ', COUNT(*) AS C FROM ', @SID_dbname, '.', @SID_tablename, ' GROUP BY ', @SID_pixid_field);
     set tmp = CONCAT('SELECT T.C AS SourcesInAPixel, COUNT(*) AS Multiplicity FROM (', tmp, ') AS T GROUP BY T.C ORDER BY SourcesInAPixel');
-    SET tmp = CONCAT('SELECT M.*, M.SourcesInAPixel * M.Multiplicity / ', nrows, ' AS Fraction, SUM(M.SourcesInAPixel * M.Multiplicity) OVER(ORDER BY M.SourcesInAPixel) / ', nrows, ' AS CumulativeFraction FROM (', tmp, ') AS M');
-    SET tmp = CONCAT('SELECT N.* FROM (', tmp, ') AS N WHERE CumulativeFraction <= 0.99');
+    SET tmp = CONCAT('SELECT M.*, M.SourcesInAPixel * M.Multiplicity / ', nrows, ' AS Fraction, SUM(M.SourcesInAPixel * M.Multiplicity) OVER(ORDER BY M.SourcesInAPixel) / ', nrows, ' AS CumulativeFraction FROM (', tmp, ') AS M LIMIT 300');
     EXECUTE IMMEDIATE tmp;
   END//
 
