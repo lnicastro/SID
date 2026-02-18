@@ -1624,8 +1624,8 @@ char * SIDRectvHEALP(UDF_INIT *init, UDF_ARGS *args,
 
   } else {
     for (unsigned short i=2; i<args->arg_count; i+=2) {  // Keep coordinates as are (TODO)
-      ra[i] = DARGS(i);
-      de[i] = DARGS(i+1);
+      ra[(i-2)/2] = DARGS(i);
+      de[(i-2)/2] = DARGS(i+1);
     }
   }
 
