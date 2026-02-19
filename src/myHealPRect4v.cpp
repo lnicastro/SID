@@ -34,7 +34,7 @@
   05/07/2016: Use Healpix_Base version 3. First version.
 
 
-  LN@IASF-INAF, May 2016                        Last change: 21/03/2020
+  LN@IASF-INAF, May 2016                        Last change: 19/02/2026
 */
 
 #include <algorithm>
@@ -118,7 +118,7 @@ int myHealPRect4v(int nested, int k, const double ra[4], const double de[4],
   }
 
 // All interested pixels!
-  base->query_polygon_inclusive(vertex, pixset, 4);
+  base->query_polygon_inclusive(vertex, pixset, 8);
 
 // If nothing found then there is an error
   if (pixset.size() == 0) {

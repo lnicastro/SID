@@ -35,7 +35,7 @@
   05/07/2016: Use Healpix_Base version 3. First version.
 
 
-  LN@IASF-INAF, May 2016                        Last change: 21/03/2017
+  LN@IASF-INAF, May 2016                        Last change: 19/02/2026
 */
 
 #include <algorithm>
@@ -222,7 +222,7 @@ cout <<"mpr, mpr_ra: "<<mpr*DEG2RAD<<", "<<mpr/cos(cde*DEG2RAD)*DEG2RAD<<endl;
       return 1;
     }
 
-    base->query_polygon_inclusive(vertex, pixset, 4);
+    base->query_polygon_inclusive(vertex, pixset, 8);
 
     if (pixset.size() > 0) {
       //unit64 not supported// pixset.toVector(flist);
