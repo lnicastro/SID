@@ -86,12 +86,18 @@ CREATE OR REPLACE PROCEDURE InitSearch(IN pdbname VARCHAR(100), IN ptablename VA
   CREATE TEMPORARY TABLE SID.regions_rect (SID_region BIGINT, SID_pixid BIGINT NOT NULL, RAd1 DOUBLE NOT NULL, DEd1 DOUBLE NOT NULL, RAd2 DOUBLE NOT NULL, DEd2 DOUBLE NOT NULL);
 
   SET @SID_library     = plibrary;
+  IF plibrary = 'HTM' THEN
+    SET @SID_library_id  = 1;
+  ELSE
+    SET @SID_library_id  = 2;
+  END IF;
   SET @SID_dbname      = pdbname;
   SET @SID_tablename   = ptablename;
   SET @SID_RAd_expr    = NULL;
   SET @SID_DEd_expr    = NULL;
   SET @SID_iorder      = piorder;
   SET @SID_pixid_field = NULL;
+  SET @SID_approx      = false;
 
   IF piorder IS NULL THEN
     IF plibrary = 'HTM' THEN
@@ -116,22 +122,30 @@ CREATE OR REPLACE PROCEDURE InitSearch(IN pdbname VARCHAR(100), IN ptablename VA
     SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = @errmsg;
   END IF;
 
-  SET tmp = CONCAT('SHOW INDEX FROM ', @SID_dbname, '.', @SID_tablename, ' WHERE Key_name = "', @SID_pixid_field, '"');
+  SET tmp = CONCAT('SELECT * FROM SID.tables_', LOWER(@SID_library), ' WHERE dbname="', @SID_dbname, '" AND tablename="', @SID_tablename, '" AND pixid_field="', @SID_pixid_field, '"');
   EXECUTE IMMEDIATE tmp;
 
-  SET tmp = CONCAT('SELECT * FROM SID.tables_', LOWER(@SID_library), ' WHERE dbname="', @SID_dbname, '" AND tablename="', @SID_tablename, '" AND pixid_field="', @SID_pixid_field, '"');
+  SET tmp = CONCAT('SHOW INDEX FROM ', @SID_dbname, '.', @SID_tablename, ' WHERE Key_name = "', @SID_pixid_field, '"');
   EXECUTE IMMEDIATE tmp;
 END//
 
 
-CREATE OR REPLACE PROCEDURE _AddFullPixels(IN region BIGINT, IN p CHAR(16))
+CREATE OR REPLACE PROCEDURE InitApproxSearch(IN pdbname VARCHAR(100), IN ptablename VARCHAR(100), IN plibrary VARCHAR(20) DEFAULT 'HEALP', IN piorder INT DEFAULT NULL)
+  NOT DETERMINISTIC
+  BEGIN
+    CALL InitSearch(pdbname, ptablename, plibrary, piorder);
+    SET @SID_approx = true;
+  END//
+
+
+CREATE OR REPLACE PROCEDURE _AddPixelsAsFull(IN region BIGINT, IN p CHAR(16), in full_flag INT)
   NOT DETERMINISTIC
   BEGIN
     DECLARE i, cc INTEGER;
-    SET cc = SIDCount(p, 1);
+    SET cc = SIDCount(p, full_flag);
     SET i = 0;
     WHILE i < cc DO
-      INSERT INTO SID.regions_full VALUES (region, SIDGetID(p, i, 1));
+      INSERT INTO SID.regions_full VALUES (region, SIDGetID(p, i, full_flag));
       SET i = i + 1;
     END WHILE;
   END//
@@ -142,18 +156,22 @@ CREATE OR REPLACE PROCEDURE AddCone(IN region BIGINT, IN ra DOUBLE, IN de DOUBLE
   BEGIN
     DECLARE p CHAR(16);
     DECLARE i, cc INTEGER;
-    IF @SID_library = 'HTM' THEN
+    IF @SID_library_id = 1 THEN -- HTM
         SET p = SIDCircleHTM(     @SID_iorder, ra, de, radius_arcmin);
-    ELSE
+    ELSE                        -- HEALP
         SET p = SIDCircleHEALP(1, @SID_iorder, ra, de, radius_arcmin); -- 1 means NESTED
     END IF;
-    CALL SID._AddFullPixels(region, p);
-    SET cc = SIDCount(p, 0);
-    SET i = 0;
-    WHILE i < cc DO
-      INSERT INTO SID.regions_cone VALUES (region, SIDGetID(p, i, 0), ra, de, radius_arcmin);
-      SET i = i + 1;
-    END WHILE;
+    CALL SID._AddPixelsAsFull(region, p, 1);
+    IF @SID_approx THEN
+        CALL SID._AddPixelsAsFull(region, p, 0); -- Add partial pixel as if they were full ones
+    ELSE
+        SET cc = SIDCount(p, 0);
+        SET i = 0;
+        WHILE i < cc DO
+          INSERT INTO SID.regions_cone VALUES (region, SIDGetID(p, i, 0), ra, de, radius_arcmin);
+          SET i = i + 1;
+        END WHILE;
+    END IF;
     SET p = SIDClear(p);
   END//
 
@@ -163,23 +181,27 @@ CREATE OR REPLACE PROCEDURE AddRect(IN region BIGINT, IN ra1 DOUBLE, IN de1 DOUB
   BEGIN
     DECLARE p CHAR(16);
     DECLARE i, cc INTEGER;
-    IF @SID_library = 'HTM' THEN
+    IF @SID_library_id = 1 THEN -- HTM
         SET p = SIDRectvHTM(     @SID_iorder, ra1, de1, ra2, de2);
-    ELSE
+    ELSE                        -- HEALP
         SET p = SIDRectvHEALP(1, @SID_iorder, ra1, de1, ra2, de2); -- 1 means NESTED
     END IF;
-    CALL SID._AddFullPixels(region, p);
-    SET cc = SIDCount(p, 0);
-    SET i = 0;
-    WHILE i < cc DO
-      INSERT INTO SID.regions_rect VALUES (region, SIDGetID(p, i, 0), ra1, de1, ra2, de2);
-      SET i = i + 1;
-    END WHILE;
+    CALL SID._AddPixelsAsFull(region, p, 1);
+    IF @SID_approx THEN
+        CALL SID._AddPixelsAsFull(region, p, 0); -- Add partial pixel as if they were full ones
+    ELSE
+        SET cc = SIDCount(p, 0);
+        SET i = 0;
+        WHILE i < cc DO
+          INSERT INTO SID.regions_rect VALUES (region, SIDGetID(p, i, 0), ra1, de1, ra2, de2);
+          SET i = i + 1;
+        END WHILE;
+    END IF;
     SET p = SIDClear(p);
   END//
 
 
-CREATE OR REPLACE FUNCTION GetQuery(IN pfields VARCHAR(500) DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
+CREATE OR REPLACE FUNCTION GetQuery(IN pfields LONGTEXT DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
   RETURNS LONGTEXT
   NOT DETERMINISTIC
   BEGIN
@@ -187,13 +209,13 @@ CREATE OR REPLACE FUNCTION GetQuery(IN pfields VARCHAR(500) DEFAULT NULL, IN whe
     DECLARE tmp BIGINT;
 
     IF pfields IS NULL THEN
-       SET pfields = CONCAT(@SID_dbname, '.', @SID_tablename, '.*');
+       SET pfields = CONCAT(@SID_dbname, '.', @SID_tablename, '.*, SID_region');
     END IF;
 
     SET tmp = NULL;
     SELECT sid_pixid INTO tmp FROM SID.regions_full LIMIT 1;
     IF tmp IS NOT NULL THEN
-        SET soutput = CONCAT(soutput, 'SELECT ', pfields, ', SID.regions_full.SID_region FROM ', @SID_dbname, '.', @SID_tablename, '\n');
+        SET soutput = CONCAT(soutput, 'SELECT ', pfields, ' FROM ', @SID_dbname, '.', @SID_tablename, '\n');
         SET soutput = CONCAT(soutput, '  INNER JOIN SID.regions_full ON ', @SID_dbname, '.', @SID_tablename, '.', @SID_pixid_field, '=SID.regions_full.sid_pixid\n');
         SET soutput = CONCAT(soutput, '  ', where_clause, '\n');
     END IF;
@@ -204,7 +226,7 @@ CREATE OR REPLACE FUNCTION GetQuery(IN pfields VARCHAR(500) DEFAULT NULL, IN whe
       IF LENGTH(soutput) > 0 THEN
           SET soutput = CONCAT(soutput, 'UNION\n');
       END IF;
-      SET soutput = CONCAT(soutput, 'SELECT ', pfields, ', SID.regions_cone.SID_region FROM ', @SID_dbname, '.', @SID_tablename, '\n');
+      SET soutput = CONCAT(soutput, 'SELECT ', pfields, ' FROM ', @SID_dbname, '.', @SID_tablename, '\n');
       SET soutput = CONCAT(soutput, '  INNER JOIN SID.regions_cone ON ', @SID_dbname, '.', @SID_tablename, '.', @SID_pixid_field, '=SID.regions_cone.sid_pixid AND\n');
       SET soutput = CONCAT(soutput, '  (Sphedist(', @SID_RAd_expr, ', ', @SID_DEd_expr, ', SID.regions_cone.RAd, SID.regions_cone.DEd) <= SID.regions_cone.radius_arcmin)\n');
       SET soutput = CONCAT(soutput, '  ', where_clause, '\n');
@@ -216,7 +238,7 @@ CREATE OR REPLACE FUNCTION GetQuery(IN pfields VARCHAR(500) DEFAULT NULL, IN whe
       IF LENGTH(soutput) > 0 THEN
           SET soutput = CONCAT(soutput, 'UNION\n');
       END IF;
-      SET soutput = CONCAT(soutput, 'SELECT ', pfields, ', SID.regions_rect.SID_region FROM ', @SID_dbname, '.', @SID_tablename, '\n');
+      SET soutput = CONCAT(soutput, 'SELECT ', pfields, ' FROM ', @SID_dbname, '.', @SID_tablename, '\n');
       SET soutput = CONCAT(soutput, '  INNER JOIN SID.regions_rect ON ', @SID_dbname, '.', @SID_tablename, '.', @SID_pixid_field, '=SID.regions_rect.sid_pixid AND\n');
       SET soutput = CONCAT(soutput, '  ((', @SID_RAd_expr, ' BETWEEN SID.regions_rect.RAd1 AND SID.regions_rect.RAd2) AND \n');
       SET soutput = CONCAT(soutput, '   (', @SID_DEd_expr, ' BETWEEN SID.regions_rect.DEd1 AND SID.regions_rect.DEd2))\n');
@@ -233,7 +255,7 @@ CREATE OR REPLACE FUNCTION GetQuery(IN pfields VARCHAR(500) DEFAULT NULL, IN whe
   END//
 
 
-CREATE OR REPLACE PROCEDURE RunQuery(IN pfields VARCHAR(500) DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
+CREATE OR REPLACE PROCEDURE RunQuery(IN pfields LONGTEXT DEFAULT NULL, IN where_clause LONGTEXT DEFAULT "")
   NOT DETERMINISTIC
   BEGIN
     DECLARE tmp LONGTEXT;
