@@ -247,7 +247,7 @@ char* HTMBary(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(result,"%.16g, %.16g",bc_ra, bc_dec);
+    snprintf(result,255, "%.16g, %.16g",bc_ra, bc_dec);
     *length = (unsigned long) strlen(result);
   }
 
@@ -295,7 +295,7 @@ char* HTMBaryC(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(result,"%.16g, %.16g",bc_ra, bc_dec);
+    snprintf(result,255,"%.16g, %.16g",bc_ra, bc_dec);
     *length = (unsigned long) strlen(result);
   }
 
@@ -343,9 +343,9 @@ char* HTMNeighb(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(result,"%lld",idn[0]);
+    snprintf(result,255,"%lld",idn[0]);
     for (unsigned int i=1; i<idn.size(); i++) {
-      sprintf(temp,", %lld",idn[i]);
+      snprintf(temp,20,", %lld",idn[i]);
       strcat(result,temp);
     }
     *length = (unsigned long) strlen(result);
@@ -406,10 +406,10 @@ char* HTMsNeighb(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(ss,"%lld",idn[0]);
+    snprintf(ss,20,"%lld",idn[0]);
     nc = strlen(ss);
     for (unsigned int i=1; i<idn.size(); i++) {
-      sprintf(temp,", %lld",idn[i]);
+      snprintf(temp,20,", %lld",idn[i]);
       nc += strlen(temp);
       if (nc > 2047) {
         char *p = (char *) realloc(ss, sizeof(char) * (nc+1));
@@ -471,9 +471,9 @@ char* HTMNeighbC(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(result,"%lld",idn[0]);
+    snprintf(result,255,"%lld",idn[0]);
     for (unsigned int i=1; i<idn.size(); i++) {
-      sprintf(temp,", %lld",idn[i]);
+      snprintf(temp,20,", %lld",idn[i]);
       strcat(result,temp);
     }
     *length = (unsigned long) strlen(result);
@@ -575,7 +575,7 @@ char* SIDCircleHTM(UDF_INIT *init, UDF_ARGS *args,
 //fprintf(stderr, "FULL: %ld  PARTIAL: %ld\n", m->flist->size(), m->plist->size()); 
 
   char buff[32];
-  sprintf(buff, "%p", m);
+  snprintf(buff,32, "%p", m);
 
 
   *length = strlen(buff);
@@ -694,7 +694,7 @@ char* SIDRectHTM(UDF_INIT *init, UDF_ARGS *args,
 //fprintf(stderr, "FULL: %ld  PARTIAL: %ld\n", m->flist->size(), m->plist->size()); 
 
   char buff[32];
-  sprintf(buff, "%p", m);
+  snprintf(buff,32, "%p", m);
 
 
   *length = strlen(buff);
@@ -826,7 +826,7 @@ char * SIDRectvHTM(UDF_INIT *init, UDF_ARGS *args,
   }
 
   char buff[32];
-  sprintf(buff, "%p", m);
+  snprintf(buff,32, "%p", m);
 
 
   *length = strlen(buff);
@@ -979,7 +979,7 @@ char * HEALPBary(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(result,"%.16g, %.16g",bc_ra, bc_dec);
+    snprintf(result,255,"%.16g, %.16g",bc_ra, bc_dec);
     *length = (unsigned long) strlen(result);
   }
 
@@ -1029,7 +1029,7 @@ char * HEALPBaryC(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(result,"%.16g, %.16g",bc_ra, bc_dec);
+    snprintf(result,255,"%.16g, %.16g",bc_ra, bc_dec);
     *length = (unsigned long) strlen(result);
   }
 
@@ -1076,9 +1076,9 @@ char * HEALPNeighb(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(result,"%lld",idn[0]);
+    snprintf(result,255,"%lld",idn[0]);
     for (unsigned int i=1; i<idn.size(); i++) {
-      sprintf(temp,", %lld",idn[i]);
+      snprintf(temp,20,", %lld",idn[i]);
       strcat(result,temp);
     }
     *length = (unsigned long) strlen(result);
@@ -1131,9 +1131,9 @@ char * HEALPNeighbC(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(result,"%lld",idn[0]);
+    snprintf(result,255,"%lld",idn[0]);
     for (unsigned int i=1; i<idn.size(); i++) {
-      sprintf(temp,", %lld",idn[i]);
+      snprintf(temp,20,", %lld",idn[i]);
       strcat(result,temp);
     }
     *length = (unsigned long) strlen(result);
@@ -1205,10 +1205,10 @@ char * HEALPBound(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(ss,"%.16g, %.16g", b_ra[0], b_dec[0]);
+    snprintf(ss,50,"%.16g, %.16g", b_ra[0], b_dec[0]);
     nc = strlen(ss);
     for (unsigned int i=1; i<b_ra.size(); i++) {
-      sprintf(temp,", %.16g, %.16g", b_ra[i], b_dec[i]);
+      snprintf(temp,50,", %.16g, %.16g", b_ra[i], b_dec[i]);
       nc += strlen(temp);
       if (nc > 2047) {
         char *p = (char *) realloc(ss, sizeof(char) * (nc+1));
@@ -1290,10 +1290,10 @@ char * HEALPBoundC(UDF_INIT *init, UDF_ARGS *args,
     *is_null = 1;
     return NULL;
   } else {
-    sprintf(ss,"%.16g, %.16g", b_ra[0], b_dec[0]);
+    snprintf(ss,50,"%.16g, %.16g", b_ra[0], b_dec[0]);
     nc = strlen(ss);
     for (unsigned int i=1; i<b_ra.size(); i++) {
-      sprintf(temp,", %.16g, %.16g", b_ra[i], b_dec[i]);
+      snprintf(temp,50,", %.16g, %.16g", b_ra[i], b_dec[i]);
       nc += strlen(temp);
       if (nc > 2047) {
         char *p = (char *) realloc(ss, sizeof(char) * (nc+1));
@@ -1382,7 +1382,7 @@ char* SIDCircleHEALP(UDF_INIT *init, UDF_ARGS *args,
 //fprintf(stderr, "FULL: %ld  PARTIAL: %ld\n", m->flist->size(), m->plist->size()); 
 
   char buff[32];
-  sprintf(buff, "%p", m);
+  snprintf(buff,32, "%p", m);
 
 
   *length = strlen(buff);
@@ -1503,7 +1503,7 @@ char* SIDRectHEALP(UDF_INIT *init, UDF_ARGS *args,
 //fprintf(stderr, "FULL: %ld  PARTIAL: %ld\n", m->flist->size(), m->plist->size()); 
 
   char buff[32];
-  sprintf(buff, "%p", m);
+  snprintf(buff,32, "%p", m);
 
 
   *length = strlen(buff);
@@ -1638,7 +1638,7 @@ char * SIDRectvHEALP(UDF_INIT *init, UDF_ARGS *args,
   }
 
   char buff[32];
-  sprintf(buff, "%p", m);
+  snprintf(buff,32, "%p", m);
 
 
   *length = strlen(buff);
