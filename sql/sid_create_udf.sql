@@ -314,9 +314,9 @@ CREATE OR REPLACE PROCEDURE AddHEALPIndex(IN dbname VARCHAR(100), IN tablename V
      EXECUTE IMMEDIATE tmp;
      SET tmp = CONCAT('UPDATE ', dbname, '.', tablename, ' SET healp', iorder, ' = HEALPLookup(1, ', iorder, ', ', RAd_expr, ', ', DEd_expr, ')'); -- 1 means NESTED
      EXECUTE IMMEDIATE tmp;
-     SET tmp = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbname, '.', tablename, ' (healp', iorder, ')');
-     EXECUTE IMMEDIATE tmp;
      SET tmp = CONCAT('INSERT INTO SID.tables_healp VALUES ("', dbname, '", "', tablename, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "healp', iorder, '")');
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('CREATE INDEX healp', iorder, ' ON ', dbname, '.', tablename, ' (healp', iorder, ')');
      EXECUTE IMMEDIATE tmp;
      CALL SID.PixelizationStats(dbname, tablename, 'HEALP', iorder);
   END//
@@ -336,9 +336,9 @@ CREATE OR REPLACE PROCEDURE AddHTMIndex(IN dbname VARCHAR(100), IN tablename VAR
      EXECUTE IMMEDIATE tmp;
      SET tmp = CONCAT('UPDATE ', dbname, '.', tablename, ' SET htm', iorder, ' = HTMLookup(', iorder, ', ', RAd_expr, ', ', DEd_expr, ')');
      EXECUTE IMMEDIATE tmp;
-     SET tmp = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbname, '.', tablename, ' (htm', iorder, ')');
-     EXECUTE IMMEDIATE tmp;
      SET tmp = CONCAT('INSERT INTO SID.tables_htm VALUES ("', dbname, '", "', tablename, '", "', RAd_expr, '", "', DEd_expr, '", ', iorder, ', "htm', iorder, '")');
+     EXECUTE IMMEDIATE tmp;
+     SET tmp = CONCAT('CREATE INDEX htm', iorder, ' ON ', dbname, '.', tablename, ' (htm', iorder, ')');
      EXECUTE IMMEDIATE tmp;
      CALL SID.PixelizationStats(dbname, tablename, 'HTM', iorder);
   END//
