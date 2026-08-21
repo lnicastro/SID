@@ -9,7 +9,7 @@ pixelization schemas and it allows very fast query execution even on billion-row
 The library is mostly derived from [DIF](https://github.com/lnicastro/DIF), with the main
 difference being its fully UDFs structure. This means that it is not necessary to install
 a dedicated storage engine (like in DIF) and consequently it is not requested to use the MySQL
-source code to compile SID. You only need to have the MySQL or MariaDB header files installed together with `mysql_config`. See e.g. the [MySQL documentation](https://dev.mysql.com/doc/refman/8.0/en/adding-functions.html).
+source code to compile SID. You only need to have the MySQL or MariaDB header files installed together with `mariadb_config`. See e.g. the [MySQL documentation](https://dev.mysql.com/doc/refman/8.0/en/adding-functions.html).
 
 Written to be used on Linux and Mac OS.
 
